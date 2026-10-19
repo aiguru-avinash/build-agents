@@ -1,0 +1,1330 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Build Agents Field Guide</title>
+<meta name="description" content="A hands-on guide to building AI agents and agentic flows with MCP and A2A on Google Cloud, AWS and Oracle Cloud.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,650&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --bg:#f6f5f1; --surface:#ffffff; --surface2:#efede6; --fg:#1b1d22; --muted:#5d626c; --line:#dcd9cf;
+  --accent:#1f4fd8; --accent-fg:#ffffff;
+  --gcp:#1a73e8; --aws:#c76a00; --oci:#c0392b;
+  --code-bg:#14161b; --code-fg:#e6e8ee; --code-muted:#8b92a3;
+  --warn-bg:#fff4d6; --warn-line:#e3b84a; --ok-bg:#e3f4e8; --ok-line:#5fae77; --info-bg:#e6eefc; --info-line:#7da0ec;
+  --serif:"Fraunces",Georgia,"Times New Roman",serif; --sans:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif; --mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#101216; --surface:#171a20; --surface2:#1e222a; --fg:#e8e9ed; --muted:#9aa0ac; --line:#2b303a;
+  --accent:#7ea2ff; --accent-fg:#0d1020;
+  --gcp:#6ea8fe; --aws:#f0a04b; --oci:#ef7b6d;
+  --code-bg:#0b0d11; --code-fg:#dfe2ea; --code-muted:#7f8798;
+  --warn-bg:#3a3014; --warn-line:#8a6d1c; --ok-bg:#16301f; --ok-line:#2f7a4a; --info-bg:#172544; --info-line:#3f5fae; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#101216; --surface:#171a20; --surface2:#1e222a; --fg:#e8e9ed; --muted:#9aa0ac; --line:#2b303a;
+  --accent:#7ea2ff; --accent-fg:#0d1020;
+  --gcp:#6ea8fe; --aws:#f0a04b; --oci:#ef7b6d;
+  --code-bg:#0b0d11; --code-fg:#dfe2ea; --code-muted:#7f8798;
+  --warn-bg:#3a3014; --warn-line:#8a6d1c; --ok-bg:#16301f; --ok-line:#2f7a4a; --info-bg:#172544; --info-line:#3f5fae; color-scheme:dark}
+
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:72px}
+body{background:var(--bg);color:var(--fg);font:16px/1.65 var(--sans);margin:0;-webkit-text-size-adjust:100%}
+.wrap{max-width:1180px;margin:0 auto;padding-inline:max(16px,env(safe-area-inset-left,0px)) max(16px,env(safe-area-inset-right,0px))}
+a{color:var(--accent)}
+code{font-family:var(--mono);font-size:.88em;background:var(--surface2);padding:.12em .38em;border-radius:4px;overflow-wrap:anywhere}
+h1,h2,h3,h4{font-family:var(--serif);line-height:1.2;text-wrap:balance;margin:0}
+h2{font-size:clamp(1.7rem,3.4vw,2.3rem);font-weight:650;letter-spacing:-.01em}
+h3{font-size:1.3rem;font-weight:600;margin-top:2.2rem}
+h4{font-size:1.05rem;font-weight:600;margin-top:1.6rem;font-family:var(--sans)}
+p{margin:.8rem 0;max-width:70ch}
+ul,ol{padding-left:1.3rem;max-width:72ch}
+li{margin:.3rem 0}
+.eyebrow{font:500 .75rem/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+
+/* top bar */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:30;background:var(--bg)}
+.top .wrap{display:flex;align-items:center;gap:14px;height:54px}
+.brand{font:650 1.05rem var(--serif);white-space:nowrap}
+.brand span{color:var(--accent)}
+.toc-scroll{display:flex;gap:2px;overflow-x:auto;flex:1;min-width:0;scrollbar-width:none}
+.toc-scroll::-webkit-scrollbar{display:none}
+.toc-scroll a{color:var(--muted);text-decoration:none;font-size:.85rem;padding:6px 10px;border-radius:6px;white-space:nowrap}
+.toc-scroll a:hover,.toc-scroll a.on{color:var(--fg);background:var(--surface2)}
+.iconbtn{border:1px solid var(--line);background:var(--surface);color:var(--fg);border-radius:8px;height:34px;padding:0 10px;font:500 .8rem var(--sans);cursor:pointer}
+.iconbtn:hover{background:var(--surface2)}
+
+/* hero */
+.hero{padding-block:56px 36px;border-bottom:1px solid var(--line)}
+.hero h1{font-size:clamp(2.2rem,6vw,4rem);font-weight:650;letter-spacing:-.02em;max-width:18ch;margin-top:14px}
+.hero h1 em{font-style:normal;color:var(--accent)}
+.lede{font-size:1.15rem;color:var(--muted);max-width:60ch;margin-top:18px}
+.cloudchips{display:flex;flex-wrap:wrap;gap:8px;margin-top:22px}
+.chip{font:500 .8rem var(--mono);border:1px solid var(--line);padding:5px 10px;border-radius:99px;background:var(--surface)}
+.chip i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:7px}
+.herogrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;margin-top:34px}
+.path{border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:16px 18px}
+.path b{display:block;font:600 .75rem var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.path p{margin:0;font-size:.95rem}
+.path button{margin-top:10px}
+
+/* sections */
+section.sec{padding-block:64px 8px;border-bottom:1px solid var(--line)}
+section.sec:last-of-type{border-bottom:0}
+.secnum{font:500 .8rem var(--mono);color:var(--accent);letter-spacing:.1em}
+.sec>.wrap>h2{margin-top:8px}
+.sec .intro{color:var(--muted);font-size:1.05rem;max-width:68ch}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:16px;margin:20px 0}
+.card{border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:16px 18px;min-width:0}
+.card h4{margin:0 0 6px}
+.card p{margin:.4rem 0;font-size:.95rem}
+.callout{border:1px solid var(--info-line);background:var(--info-bg);border-radius:10px;padding:12px 16px;margin:18px 0;max-width:80ch}
+.callout.warn{border-color:var(--warn-line);background:var(--warn-bg)}
+.callout.ok{border-color:var(--ok-line);background:var(--ok-bg)}
+.callout p{margin:.3rem 0;font-size:.95rem}
+.callout strong:first-child{display:block;font:600 .72rem var(--mono);letter-spacing:.09em;text-transform:uppercase;margin-bottom:2px}
+
+/* code */
+.codeblock{position:relative;margin:14px 0;border-radius:10px;overflow:hidden;background:var(--code-bg);border:1px solid #00000033;max-width:100%}
+.codeblock .bar{display:flex;justify-content:space-between;align-items:center;padding:6px 10px 6px 14px;font:500 .72rem var(--mono);color:var(--code-muted);border-bottom:1px solid #ffffff14}
+.codeblock .bar button{background:transparent;color:var(--code-muted);border:1px solid #ffffff22;border-radius:6px;font:500 .72rem var(--mono);padding:3px 9px;cursor:pointer}
+.codeblock .bar button:hover{color:var(--code-fg);border-color:#ffffff55}
+.codeblock pre{margin:0;padding:14px;overflow-x:auto;color:var(--code-fg);font:400 .82rem/1.6 var(--mono);tab-size:2}
+.codeblock pre code{background:none;padding:0;font:inherit;overflow-wrap:normal}
+.tok-c{color:#7f8aa3}.tok-s{color:#a5d6a7}.tok-k{color:#c4a7ff}.tok-n{color:#ffcb8a}
+
+/* tables */
+.tablewrap{overflow-x:auto;margin:18px 0;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:.9rem;min-width:620px}
+th,td{padding:9px 12px;text-align:left;vertical-align:top;border-bottom:1px solid var(--line)}
+th{font:600 .72rem var(--mono);letter-spacing:.07em;text-transform:uppercase;color:var(--muted);background:var(--surface2);position:sticky;top:0}
+tr:last-child td{border-bottom:0}
+td.gcp,th.gcp{border-top:3px solid var(--gcp)}td.aws,th.aws{border-top:3px solid var(--aws)}td.oci,th.oci{border-top:3px solid var(--oci)}
+
+/* cloud tabs */
+.cloudtabs{display:flex;gap:8px;margin:26px 0 6px;position:sticky;top:calc(54px + env(safe-area-inset-top,0px));z-index:10;background:var(--bg);padding:10px 0;flex-wrap:wrap}
+.ctab{flex:1 1 140px;border:1px solid var(--line);background:var(--surface);color:var(--fg);padding:11px 14px;border-radius:10px;font:600 .95rem var(--sans);cursor:pointer;text-align:left;border-top:4px solid var(--line)}
+.ctab small{display:block;font:400 .75rem var(--sans);color:var(--muted)}
+.ctab[data-cloud="gcp"]{border-top-color:var(--gcp)}.ctab[data-cloud="aws"]{border-top-color:var(--aws)}.ctab[data-cloud="oci"]{border-top-color:var(--oci)}
+.ctab[aria-selected="true"]{background:var(--surface2);outline:2px solid var(--fg);outline-offset:-2px}
+.cpanel{padding-top:8px}
+.steps{counter-reset:step;display:flex;flex-direction:column;gap:6px}
+.step{counter-increment:step;position:relative;padding:4px 0 10px 54px;min-width:0}
+.step::before{content:counter(step);position:absolute;left:0;top:6px;width:34px;height:34px;border-radius:50%;border:2px solid var(--cl,var(--accent));color:var(--cl,var(--accent));font:600 .9rem var(--mono);display:grid;place-items:center;background:var(--bg)}
+.step::after{content:"";position:absolute;left:16px;top:44px;bottom:-6px;width:2px;background:var(--line)}
+.step:last-child::after{display:none}
+.step>h3{margin-top:0;font-size:1.2rem}
+#panel-gcp{--cl:var(--gcp)}#panel-aws{--cl:var(--aws)}#panel-oci{--cl:var(--oci)}
+.tag{display:inline-block;font:600 .68rem var(--mono);letter-spacing:.06em;text-transform:uppercase;padding:2px 7px;border-radius:5px;margin-left:8px;vertical-align:middle;border:1px solid var(--line);color:var(--muted)}
+.tag.verify{border-color:var(--warn-line);background:var(--warn-bg);color:var(--fg)}
+.tag.ok{border-color:var(--ok-line);background:var(--ok-bg);color:var(--fg)}
+
+/* diagram */
+.diagram{overflow-x:auto;margin:20px 0;border:1px solid var(--line);border-radius:12px;background:var(--surface);padding:10px}
+.diagram svg{min-width:720px;width:100%;height:auto;display:block}
+.diagram .bx{fill:var(--surface2);stroke:var(--line);stroke-width:1.4}
+.diagram .bx.a{stroke:var(--accent);stroke-width:2}
+.diagram .g{stroke:var(--gcp);fill:color-mix(in srgb,var(--gcp) 12%,var(--surface))}
+.diagram .w{stroke:var(--aws);fill:color-mix(in srgb,var(--aws) 12%,var(--surface))}
+.diagram .o{stroke:var(--oci);fill:color-mix(in srgb,var(--oci) 12%,var(--surface))}
+.diagram text{fill:var(--fg);font:500 13px var(--sans)}
+.diagram text.s{fill:var(--muted);font:400 11.5px var(--sans)}
+.diagram text.m{font:500 11px var(--mono);fill:var(--muted)}
+.diagram .ln{stroke:var(--fg);stroke-width:1.6;fill:none;opacity:.75}
+.diagram .ln.dash{stroke-dasharray:5 4}
+.diagram .ln.mcp{stroke:var(--accent)}
+
+/* quiz + checklists */
+.quiz{border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:18px;margin:20px 0}
+.q{margin:14px 0}
+.q p{margin:.2rem 0 .5rem;font-weight:600}
+.q label{display:inline-flex;align-items:center;gap:6px;margin:3px 14px 3px 0;font-size:.92rem;cursor:pointer}
+.result{margin-top:14px;display:grid;gap:8px}
+.rbar{display:flex;align-items:center;gap:10px;font-size:.88rem}
+.rbar .t{flex:1;height:10px;background:var(--surface2);border-radius:5px;overflow:hidden}
+.rbar .t i{display:block;height:100%;border-radius:5px;width:0;transition:width .3s}
+.rbar b{min-width:92px;font-weight:600}
+.check{list-style:none;padding:0;max-width:80ch}
+.check li{display:flex;gap:10px;align-items:flex-start;padding:8px 12px;border:1px solid var(--line);border-radius:8px;background:var(--surface);margin:6px 0}
+.check input{margin-top:5px;accent-color:var(--accent)}
+.check li.done span{text-decoration:line-through;color:var(--muted)}
+.progress{height:8px;background:var(--surface2);border-radius:5px;overflow:hidden;max-width:80ch;margin:6px 0 12px}
+.progress i{display:block;height:100%;background:var(--ok-line);width:0;transition:width .25s}
+
+footer{padding-block:48px 80px;color:var(--muted);font-size:.9rem}
+footer ul{padding-left:1.1rem}
+.srcs li{overflow-wrap:anywhere}
+@media (max-width:640px){
+  .brand{font-size:.95rem}
+  .step{padding-left:44px}.step::before{width:28px;height:28px;font-size:.78rem}.step::after{left:13px;top:38px}
+  .cloudtabs{top:calc(54px + env(safe-area-inset-top,0px))}
+  section.sec{padding-top:48px}
+}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}.rbar .t i,.progress i{transition:none}}
+</style>
+</head>
+<body>
+
+
+<header class="top">
+  <div class="wrap">
+    <div class="brand">Build<span>Agents</span></div>
+    <nav class="toc-scroll" id="toc" aria-label="Sections">
+      <a href="#foundations">Foundations</a>
+      <a href="#protocols">MCP &amp; A2A</a>
+      <a href="#architecture">Architecture</a>
+      <a href="#build">Build tracks</a>
+      <a href="#crosscloud">Cross-cloud</a>
+      <a href="#security">Security</a>
+      <a href="#production">Production</a>
+      <a href="#compare">Compare</a>
+      <a href="#reference">Reference</a>
+    </nav>
+    <button class="iconbtn" id="themeBtn" type="button" aria-label="Toggle colour theme">Theme</button>
+  </div>
+</header>
+
+<main>
+<div class="hero">
+  <div class="wrap">
+    <div class="eyebrow">A field guide for engineers · Updated October 2026</div>
+    <h1>Build agents that <em>work together</em>, on any cloud.</h1>
+    <p class="lede">One place to go from "what is an agent?" to a deployed, secured, observable multi-agent system on Google Cloud, AWS or Oracle Cloud, wired together with MCP for tools and A2A for agent-to-agent calls.</p>
+    <div class="cloudchips">
+      <span class="chip"><i style="background:var(--gcp)"></i>Google Cloud · ADK, Agent Runtime</span>
+      <span class="chip"><i style="background:var(--aws)"></i>AWS · Strands, Bedrock AgentCore</span>
+      <span class="chip"><i style="background:var(--oci)"></i>Oracle Cloud · Responses API, OCI ADK</span>
+    </div>
+    <div class="herogrid">
+      <div class="path"><b>New to agents</b><p>Start with Foundations: anatomy, the think-act-observe loop, memory, and a 40-line agent with no framework.</p><button class="iconbtn" data-go="foundations" type="button">Start at 01</button></div>
+      <div class="path"><b>Know agents, need a cloud</b><p>Jump to the build track for your platform. Each has the same eight steps, so you can compare as you go.</p><button class="iconbtn" data-go="build" type="button">Open build tracks</button></div>
+      <div class="path"><b>Choosing a platform</b><p>Answer five questions and see which cloud fits, then check the comparison matrix.</p><button class="iconbtn" data-go="compare" type="button">Which cloud?</button></div>
+      <div class="path"><b>Going to production</b><p>Security hardening, evaluation, observability and a launch checklist you can tick off.</p><button class="iconbtn" data-go="production" type="button">Production checklist</button></div>
+    </div>
+    <div class="callout warn" style="margin-top:28px">
+      <strong>Read this about versions</strong>
+      <p>Agent tooling changes monthly. Every command and code sample here was checked against vendor documentation in October 2026, and each is marked <span class="tag ok">checked</span> or <span class="tag verify">verify</span>. Treat a "verify" tag as "run it against the current docs before you rely on it". Model IDs are placeholders you must replace with a model you have access to.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 01 FOUNDATIONS ============ -->
+<section class="sec" id="foundations"><div class="wrap">
+  <div class="secnum">01</div>
+  <h2>Foundations: what an agent actually is</h2>
+  <p class="intro">A chatbot answers. An agent decides what to do next, does it, looks at the result and repeats until the goal is met. Everything else in this guide is plumbing around that loop.</p>
+
+  <h3>The four parts</h3>
+  <div class="grid2">
+    <div class="card"><h4>1 · Brain (LLM)</h4><p>Reasons about the goal, picks the next action, writes tool arguments. Choose by task: a small fast model for routing and extraction, a larger one for planning and hard reasoning.</p></div>
+    <div class="card"><h4>2 · Memory</h4><p><b>Buffer</b>: the current conversation. <b>Working</b>: scratchpad for the current task (plan, intermediate results). <b>Long-term</b>: facts and past experience in a vector store or database, retrieved when relevant.</p></div>
+    <div class="card"><h4>3 · Tools</h4><p><b>Retrieval</b> (search, RAG, SQL), <b>action</b> (create ticket, send email), <b>analysis</b> (code interpreter), <b>communication</b> (call another agent). Tools are how an agent touches the world.</p></div>
+    <div class="card"><h4>4 · Planner</h4><p>Breaks a goal into steps, orders them, and revises when a step fails. Sometimes explicit (a plan object), often implicit in the model's reasoning.</p></div>
+  </div>
+
+  <h3>The loop</h3>
+  <p>Every agent runs some version of <b>Think → Act → Observe</b>, with a stop check each turn. Stop when the goal is met, when a step limit is hit, or when a human must decide.</p>
+  <div class="diagram">
+    <svg viewBox="0 0 760 150" role="img" aria-label="Think, act, observe loop with stop check">
+      <defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="currentColor" style="color:var(--fg)"/></marker></defs>
+      <rect class="bx a" x="20" y="45" width="150" height="56" rx="10"/><text x="95" y="70" text-anchor="middle">Think</text><text class="s" x="95" y="88" text-anchor="middle">decide next step</text>
+      <rect class="bx" x="230" y="45" width="150" height="56" rx="10"/><text x="305" y="70" text-anchor="middle">Act</text><text class="s" x="305" y="88" text-anchor="middle">call a tool</text>
+      <rect class="bx" x="440" y="45" width="150" height="56" rx="10"/><text x="515" y="70" text-anchor="middle">Observe</text><text class="s" x="515" y="88" text-anchor="middle">read the result</text>
+      <rect class="bx" x="640" y="45" width="100" height="56" rx="28"/><text x="690" y="70" text-anchor="middle">Done?</text><text class="s" x="690" y="88" text-anchor="middle">stop check</text>
+      <path class="ln" d="M170 73H228" marker-end="url(#ar)"/><path class="ln" d="M380 73H438" marker-end="url(#ar)"/><path class="ln" d="M590 73H638" marker-end="url(#ar)"/>
+      <path class="ln dash" d="M690 101V132H95V103" marker-end="url(#ar)"/><text class="m" x="400" y="126" text-anchor="middle">not done: loop with the new observation in context</text>
+    </svg>
+  </div>
+
+  <h3>A complete agent in about 40 lines, no framework</h3>
+  <p>Frameworks hide this loop. Write it once so you know what they are doing for you. The <code>llm()</code> function is a stand-in for any model API that supports tool calling.</p>
+
+<div class="codeblock" data-lang="python"><div class="bar"><span>agent_loop.py</span><button type="button">Copy</button></div><pre><code>import json
+
+# 1. Tools: plain functions plus a schema the model can read.
+def get_order_status(order_id: str) -&gt; dict:
+    return {"order_id": order_id, "status": "shipped", "eta": "2026-10-22"}
+
+TOOLS = {"get_order_status": get_order_status}
+TOOL_SCHEMAS = [{
+    "name": "get_order_status",
+    "description": "Look up the shipping status of ONE order by its ID. "
+                   "Use when the customer asks where an order is.",
+    "parameters": {"type": "object",
+                   "properties": {"order_id": {"type": "string"}},
+                   "required": ["order_id"]},
+}]
+
+def llm(messages, tools):
+    """Call your model here. Return either
+       {"type": "text", "text": "..."}   or
+       {"type": "tool_call", "name": "...", "args": {...}, "id": "..."}"""
+    raise NotImplementedError
+
+def run_agent(goal: str, max_steps: int = 8) -&gt; str:
+    messages = [
+        {"role": "system", "content": "You are a support agent. Use tools; never guess."},
+        {"role": "user", "content": goal},
+    ]
+    for _ in range(max_steps):                       # hard step limit
+        reply = llm(messages, TOOL_SCHEMAS)           # THINK
+        if reply["type"] == "text":                   # stop check
+            return reply["text"]
+        try:                                          # ACT
+            result = TOOLS[reply["name"]](**reply["args"])
+        except Exception as e:                        # errors are observations too
+            result = {"error": str(e)}
+        messages.append({"role": "assistant", "tool_call": reply})
+        messages.append({"role": "tool", "id": reply["id"],   # OBSERVE
+                         "content": json.dumps(result)})
+    return "Stopped: step limit reached. Escalating to a human."</code></pre></div>
+
+  <h3>Four patterns that cover most designs</h3>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Pattern</th><th>What it does</th><th>Use when</th><th>Watch out for</th></tr></thead>
+    <tbody>
+      <tr><td><b>Tool use</b></td><td>Model calls functions and reads results.</td><td>Almost always. It is the base.</td><td>Vague tool descriptions cause wrong calls.</td></tr>
+      <tr><td><b>Reflection</b></td><td>Agent critiques its own output, then revises.</td><td>Writing, code, anything with a checkable standard.</td><td>Extra latency and cost; cap at 1-2 rounds.</td></tr>
+      <tr><td><b>Planning</b></td><td>Make a plan first, then execute step by step.</td><td>Multi-step tasks with dependencies.</td><td>Plans go stale; allow re-planning on failure.</td></tr>
+      <tr><td><b>Multi-agent</b></td><td>Specialist agents coordinated by a manager, peers or a marketplace.</td><td>Distinct skills, separate teams or vendors.</td><td>Coordination cost. Start with one agent and split only when needed.</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>Rules of thumb that save weeks</h3>
+  <ul>
+    <li><b>Keep 3 to 5 tools per agent.</b> Accuracy drops as the tool list grows. Past that, split into specialist agents.</li>
+    <li><b>Write tool descriptions like onboarding notes.</b> Say what it does, when to use it, and when not to. Name parameters clearly and give units and formats.</li>
+    <li><b>Return small, structured tool results.</b> Large raw payloads burn context and confuse the model.</li>
+    <li><b>Run independent tool calls in parallel</b>, stream partial output, cache repeated lookups, and retry transient failures with backoff.</li>
+    <li><b>Always set a step limit and a timeout.</b> Agents can loop forever, and the bill keeps running.</li>
+    <li><b>Latency budgets:</b> about 2 seconds for simple lookups, 10 seconds for a multi-tool answer, 30 seconds before you need a progress indicator or an async job.</li>
+  </ul>
+</div></section>
+
+<!-- ============ 02 PROTOCOLS ============ -->
+<section class="sec" id="protocols"><div class="wrap">
+  <div class="secnum">02</div>
+  <h2>The two protocols: MCP for tools, A2A for agents</h2>
+  <p class="intro">Think of MCP as the USB port between an agent and its tools, and A2A as the phone line between one agent and another. They solve different problems and you will usually use both.</p>
+
+  <div class="tablewrap"><table>
+    <thead><tr><th></th><th>MCP (Model Context Protocol)</th><th>A2A (Agent2Agent)</th></tr></thead>
+    <tbody>
+      <tr><td><b>Connects</b></td><td>An agent to tools and data</td><td>An agent to another agent</td></tr>
+      <tr><td><b>Origin</b></td><td>Anthropic, November 2024; now under the Linux Foundation's Agentic AI Foundation</td><td>Google, April 2025; now a Linux Foundation project, v1.0 released in 2026</td></tr>
+      <tr><td><b>Exposes</b></td><td>Tools, resources, prompts</td><td>Skills advertised in an Agent Card; tasks with a lifecycle</td></tr>
+      <tr><td><b>Discovery</b></td><td>You configure the server URL or command</td><td>Fetch the Agent Card at <code>/.well-known/agent-card.json</code></td></tr>
+      <tr><td><b>Transport</b></td><td>stdio (local) or Streamable HTTP (remote)</td><td>JSON-RPC over HTTP, gRPC, or HTTP+JSON; streaming and push notifications</td></tr>
+      <tr><td><b>Best for</b></td><td>Deterministic calls: query a database, call an API</td><td>Delegating a goal to an autonomous peer that may take time and ask questions</td></tr>
+      <tr><td><b>State</b></td><td>Mostly stateless request and response</td><td>Stateful tasks: submitted, working, input-required, completed, failed and more</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="callout">
+    <strong>Rule of thumb</strong>
+    <p>If the callee is a function with a fixed contract, expose it as an MCP tool. If the callee reasons, may take minutes, or belongs to another team, expose it as an A2A agent.</p>
+  </div>
+
+  <h3>MCP in one page</h3>
+  <p>An MCP server advertises <b>tools</b> (callable functions with JSON Schema inputs), <b>resources</b> (readable data) and <b>prompts</b> (reusable templates). A client lists them and calls them. Use <b>stdio</b> for a local subprocess and <b>Streamable HTTP</b> for anything remote. The older "HTTP+SSE" transport is deprecated, so if a tutorial tells you to use it, translate to Streamable HTTP.</p>
+  <p>Here is a complete, working MCP server using the official Python SDK's FastMCP helper. Run it locally with stdio first, then switch the last line to serve over HTTP.</p>
+
+<div class="codeblock" data-lang="python"><div class="bar"><span>orders_mcp.py  (pip install &quot;mcp[cli]&quot;)</span><button type="button">Copy</button></div><pre><code>from mcp.server.fastmcp import FastMCP
+
+mcp = FastMCP("orders")
+
+@mcp.tool()
+def get_order_status(order_id: str) -&gt; dict:
+    """Look up the shipping status of one order by ID.
+    Use when a customer asks where their order is.
+    Args:
+        order_id: The order ID, for example "A-1042".
+    """
+    # Replace with a real database or API call.
+    return {"order_id": order_id, "status": "shipped", "eta": "2026-10-22"}
+
+if __name__ == "__main__":
+    # Local development over stdio:
+    # mcp.run()
+    # Remote over Streamable HTTP (serves at /mcp on port 8000):
+    mcp.run(transport="streamable-http")</code></pre></div>
+
+  <p>Test it with the MCP Inspector before any agent touches it:</p>
+
+<div class="codeblock" data-lang="bash"><div class="bar"><span>bash</span><button type="button">Copy</button></div><pre><code>npx @modelcontextprotocol/inspector
+# Connect with transport "Streamable HTTP" to http://localhost:8000/mcp
+# then call get_order_status from the Tools tab.</code></pre></div>
+
+  <h3>A2A in one page</h3>
+  <p>An A2A server publishes an <b>Agent Card</b>: who it is, what skills it has, where to call it and how to authenticate. A client fetches the card, then sends a <b>message</b>. The server answers with a direct message or creates a <b>task</b> that moves through states and produces <b>artifacts</b> as output.</p>
+
+  <div class="callout warn">
+    <strong>A2A has two live wire formats</strong>
+    <p>Spec <b>v1.0</b> renamed things from <b>v0.3</b>: the card moved from <code>agent.json</code> to <code>agent-card.json</code>, a single <code>url</code> became a <code>supportedInterfaces</code> list, methods became <code>SendMessage</code>, <code>GetTask</code> and so on, task states gained a <code>TASK_STATE_</code> prefix, and clients send an <code>A2A-Version: 1.0</code> header (no header means 0.3). Many deployed agents and cloud docs still speak 0.3. Before wiring two agents together, fetch each card and check which version it declares.</p>
+  </div>
+
+  <h4>Agent Card, v1.0 style <span class="tag verify">verify fields against the spec</span></h4>
+<div class="codeblock" data-lang="json"><div class="bar"><span>/.well-known/agent-card.json</span><button type="button">Copy</button></div><pre><code>{
+  "name": "Order Support Agent",
+  "description": "Answers order status and returns questions.",
+  "version": "1.0.0",
+  "supportedInterfaces": [
+    { "url": "https://orders.example.com/a2a", "protocolBinding": "JSONRPC", "protocolVersion": "1.0" }
+  ],
+  "capabilities": { "streaming": true, "pushNotifications": false },
+  "defaultInputModes": ["text/plain"],
+  "defaultOutputModes": ["text/plain"],
+  "skills": [
+    {
+      "id": "order-status",
+      "name": "Order status",
+      "description": "Look up shipping status for an order ID.",
+      "tags": ["orders", "support"],
+      "examples": ["Where is order A-1042?"]
+    }
+  ]
+}</code></pre></div>
+
+  <h4>Calling it over JSON-RPC</h4>
+  <p>The 0.3 style below is the one most deployed agents (including current AWS AgentCore examples) accept. It is plain HTTP, so you can test any A2A agent from a terminal.</p>
+
+<div class="codeblock" data-lang="bash"><div class="bar"><span>A2A 0.3 style: message/send</span><button type="button">Copy</button></div><pre><code>curl -s https://orders.example.com/a2a \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{
+    "jsonrpc": "2.0",
+    "id": "1",
+    "method": "message/send",
+    "params": {
+      "message": {
+        "role": "user",
+        "messageId": "msg-001",
+        "parts": [{ "kind": "text", "text": "Where is order A-1042?" }]
+      }
+    }
+  }'</code></pre></div>
+
+<div class="codeblock" data-lang="bash"><div class="bar"><span>A2A 1.0 style: SendMessage  (verify against the v1.0 spec)</span><button type="button">Copy</button></div><pre><code>curl -s https://orders.example.com/a2a \
+  -H "Content-Type: application/json" \
+  -H "A2A-Version: 1.0" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{
+    "jsonrpc": "2.0",
+    "id": "1",
+    "method": "SendMessage",
+    "params": {
+      "message": {
+        "role": "ROLE_USER",
+        "messageId": "msg-001",
+        "parts": [{ "text": "Where is order A-1042?" }]
+      }
+    }
+  }'</code></pre></div>
+
+  <h4>Task lifecycle</h4>
+  <p>A long-running request returns a task you can poll with <code>GetTask</code>, stream, or receive via push notification. States: submitted, working, <b>input-required</b> (the agent needs more from you), <b>auth-required</b>, completed, failed, canceled, rejected and unknown. Treat input-required as a first-class path: it is how an agent asks a human or its caller for missing information.</p>
+</div></section>
+
+<!-- ============ 03 ARCHITECTURE ============ -->
+<section class="sec" id="architecture"><div class="wrap">
+  <div class="secnum">03</div>
+  <h2>Reference architecture and flow patterns</h2>
+  <p class="intro">This shape works on every cloud. Swap the platform band for GCP, AWS or OCI services and the structure stays the same.</p>
+
+  <div class="diagram">
+    <svg viewBox="0 0 900 500" role="img" aria-label="Client calls an orchestrator agent, which delegates by A2A to three specialist agents, each using MCP tools, all running on a cloud platform with identity, secrets and observability">
+      <defs>
+        <marker id="ar2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="currentColor" style="color:var(--fg)"/></marker>
+        <marker id="ar3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="currentColor" style="color:var(--accent)"/></marker>
+      </defs>
+      <rect class="bx" x="360" y="14" width="180" height="46" rx="10"/><text x="450" y="42" text-anchor="middle">Client: app, chat, API</text>
+      <path class="ln" d="M450 60V88" marker-end="url(#ar2)"/>
+      <rect class="bx a" x="330" y="90" width="240" height="64" rx="12"/><text x="450" y="118" text-anchor="middle">Orchestrator agent</text><text class="s" x="450" y="138" text-anchor="middle">plans, delegates, merges answers</text>
+      <path class="ln dash" d="M390 154L150 218" marker-end="url(#ar2)"/><path class="ln dash" d="M450 154V218" marker-end="url(#ar2)"/><path class="ln dash" d="M510 154L750 218" marker-end="url(#ar2)"/>
+      <text class="m" x="250" y="178" text-anchor="middle">A2A</text><text class="m" x="462" y="190">A2A</text><text class="m" x="650" y="178" text-anchor="middle">A2A</text>
+      <rect class="bx g" x="50" y="220" width="200" height="60" rx="10"/><text x="150" y="246" text-anchor="middle">Data agent</text><text class="s" x="150" y="264" text-anchor="middle">analytics and SQL</text>
+      <rect class="bx w" x="350" y="220" width="200" height="60" rx="10"/><text x="450" y="246" text-anchor="middle">Operations agent</text><text class="s" x="450" y="264" text-anchor="middle">tickets, workflows</text>
+      <rect class="bx o" x="650" y="220" width="200" height="60" rx="10"/><text x="750" y="246" text-anchor="middle">Knowledge agent</text><text class="s" x="750" y="264" text-anchor="middle">documents, RAG</text>
+      <path class="ln mcp" d="M150 280V314" marker-end="url(#ar3)"/><path class="ln mcp" d="M450 280V314" marker-end="url(#ar3)"/><path class="ln mcp" d="M750 280V314" marker-end="url(#ar3)"/>
+      <text class="m" x="162" y="302">MCP</text><text class="m" x="462" y="302">MCP</text><text class="m" x="762" y="302">MCP</text>
+      <rect class="bx" x="50" y="316" width="200" height="46" rx="8"/><text x="150" y="344" text-anchor="middle">Warehouse, BI tools</text>
+      <rect class="bx" x="350" y="316" width="200" height="46" rx="8"/><text x="450" y="344" text-anchor="middle">Ticketing, CRM, email</text>
+      <rect class="bx" x="650" y="316" width="200" height="46" rx="8"/><text x="750" y="344" text-anchor="middle">Vector store, file store</text>
+      <rect x="30" y="384" width="840" height="104" rx="12" fill="none" stroke="var(--line)" stroke-width="1.5" stroke-dasharray="6 5"/>
+      <text class="m" x="46" y="402">PLATFORM BAND: the same on every cloud</text>
+      <text class="s" x="46" y="422">Runtime and scaling · Identity and secrets · Guardrails · Tracing and metrics · Evaluation · Registry and discovery</text>
+      <text class="s" x="46" y="440">GCP: Agent Runtime · IAM · Secret Manager · Model Armor · Cloud Trace</text>
+      <text class="s" x="46" y="456">AWS: AgentCore · IAM · Secrets Manager · Guardrails · CloudWatch</text>
+      <text class="s" x="46" y="472">OCI: Hosted apps · IAM · Vault · guardrails · APM</text>
+    </svg>
+  </div>
+
+  <h3>Choosing a flow</h3>
+  <div class="grid2">
+    <div class="card"><h4>Single agent + MCP tools</h4><p>Start here. One agent, 3 to 5 tools, one team. Most business automations never need more.</p></div>
+    <div class="card"><h4>Orchestrator + specialists</h4><p>A manager agent delegates to specialists in-process (sub-agents) or over A2A. Choose A2A when specialists belong to other teams, clouds or vendors.</p></div>
+    <div class="card"><h4>Sequential pipeline</h4><p>Fixed stages: extract, validate, enrich, write. Use workflow agents or a plain state machine. Do not pay for LLM planning when the order is known.</p></div>
+    <div class="card"><h4>Peer collaboration or marketplace</h4><p>Agents discover each other through a registry and negotiate. Powerful, hardest to govern. Add only with identity, quotas and audit logging in place.</p></div>
+  </div>
+  <div class="callout ok"><strong>Recommended path</strong><p>Single agent with MCP tools → add a reflection pass → split one specialist behind A2A → add a second cloud only when data or policy forces you to. Each step should be justified by a measured problem.</p></div>
+</div></section>
+
+<!-- ============ 04 BUILD TRACKS ============ -->
+<section class="sec" id="build"><div class="wrap">
+  <div class="secnum">04</div>
+  <h2>Build tracks: the same eight steps on each cloud</h2>
+  <p class="intro">Pick a cloud. Every track follows the same order: set up, build the agent, add MCP tools, expose it over A2A, deploy, secure identity, observe, and avoid the known traps. The sample agent is the order-support agent from earlier, so you can compare the code across platforms.</p>
+
+  <div class="cloudtabs" role="tablist" aria-label="Choose a cloud">
+    <button class="ctab" role="tab" data-cloud="gcp" aria-selected="true" aria-controls="panel-gcp" type="button">Google Cloud<small>ADK · Agent Runtime · Cloud Run</small></button>
+    <button class="ctab" role="tab" data-cloud="aws" aria-selected="false" aria-controls="panel-aws" type="button">AWS<small>Strands · Bedrock AgentCore</small></button>
+    <button class="ctab" role="tab" data-cloud="oci" aria-selected="false" aria-controls="panel-oci" type="button">Oracle Cloud<small>Responses API · OCI ADK · Hosted apps</small></button>
+  </div>
+
+  <!-- ================= GCP ================= -->
+  <div class="cpanel" id="panel-gcp" role="tabpanel">
+    <p>Google's path centres on the <b>Agent Development Kit (ADK)</b>, an open-source framework with first-class MCP and A2A support. You run the result on <b>Agent Runtime</b> (the managed service also called Agent Engine in older docs and APIs) or on <b>Cloud Run</b> if you want a plain container.</p>
+    <div class="steps">
+
+      <div class="step"><h3>Set up the project</h3>
+        <p>You need a Google Cloud project with billing, the gcloud CLI, and Python 3.10 or newer.</p>
+<div class="codeblock" data-lang="bash"><div class="bar"><span>bash</span><button type="button">Copy</button></div><pre><code>gcloud auth login
+gcloud auth application-default login
+gcloud config set project MY-PROJECT-ID
+
+gcloud services enable aiplatform.googleapis.com \
+  cloudresourcemanager.googleapis.com \
+  run.googleapis.com cloudbuild.googleapis.com \
+  secretmanager.googleapis.com
+
+python -m venv .venv &amp;&amp; source .venv/bin/activate
+pip install "google-adk[a2a]"</code></pre></div>
+        <p>Create the project layout ADK expects. The variable must be named <code>root_agent</code>.</p>
+<div class="codeblock" data-lang="text"><div class="bar"><span>text</span><button type="button">Copy</button></div><pre><code>order_agent/
+  __init__.py      # contains:  from . import agent
+  agent.py         # defines root_agent
+  requirements.txt
+  .env             # local dev only, never commit</code></pre></div>
+<div class="codeblock" data-lang="bash"><div class="bar"><span>order_agent/.env</span><button type="button">Copy</button></div><pre><code>GOOGLE_CLOUD_PROJECT=MY-PROJECT-ID
+GOOGLE_CLOUD_LOCATION=us-central1
+# Use Vertex AI-hosted Gemini instead of an API key.
+# Current ADK docs name this variable GOOGLE_GENAI_USE_ENTERPRISE;
+# older releases used GOOGLE_GENAI_USE_VERTEXAI. Set the one your version reads.
+GOOGLE_GENAI_USE_ENTERPRISE=True</code></pre></div>
+        <span class="tag ok">checked: layout, env vars, APIs</span>
+      </div>
+
+      <div class="step"><h3>Build the agent with a tool</h3>
+        <p>ADK turns a typed Python function with a docstring into a tool. The docstring is what the model reads, so write it carefully.</p>
+<div class="codeblock" data-lang="python"><div class="bar"><span>order_agent/agent.py</span><button type="button">Copy</button></div><pre><code>from google.adk.agents import Agent
+
+def get_order_status(order_id: str) -&gt; dict:
+    """Look up the shipping status of one order by ID.
+
+    Use when a customer asks where their order is.
+
+    Args:
+        order_id: The order ID, for example "A-1042".
+
+    Returns:
+        A dict with status and eta, or an error message.
+    """
+    return {"order_id": order_id, "status": "shipped", "eta": "2026-10-22"}
+
+root_agent = Agent(
+    name="order_support_agent",
+    model="gemini-2.5-flash",   # replace with a current Gemini model you can use
+    description="Answers order status questions.",   # other agents read this
+    instruction=(
+        "You help customers with orders. Always call a tool for order data. "
+        "If an order ID is missing, ask for it. Never invent order details."
+    ),
+    tools=[get_order_status],
+)</code></pre></div>
+<div class="codeblock" data-lang="bash"><div class="bar"><span>bash</span><button type="button">Copy</button></div><pre><code>adk web      # local dev UI with traces; run from the folder that contains order_agent/
+adk run order_agent</code></pre></div>
+        <span class="tag ok">checked: structure</span><span class="tag verify">verify: model name</span>
+      </div>
+
+      <div class="step"><h3>Add MCP tools</h3>
+        <p>ADK connects to an MCP server through <code>MCPToolset</code>. For a remote server use Streamable HTTP connection parameters. Google also offers managed remote MCP servers for its own services, controlled by IAM and Model Armor; check the current list in Google's docs and use those instead of building your own where they fit.</p>
+<div class="codeblock" data-lang="python"><div class="bar"><span>order_agent/agent.py  (replace the tools list)</span><button type="button">Copy</button></div><pre><code>from google.adk.agents import Agent
+from google.adk.tools.mcp_tool.mcp_toolset import MCPToolset
+from google.adk.tools.mcp_tool.mcp_session_manager import StreamableHTTPConnectionParams
+
+orders_tools = MCPToolset(
+    connection_params=StreamableHTTPConnectionParams(
+        url="https://orders-mcp-xxxx.a.run.app/mcp",
+        headers={"Authorization": "Bearer &lt;ID_TOKEN&gt;"},   # see step 6 for real auth
+    ),
+    tool_filter=["get_order_status"],   # expose only what this agent needs
+)
+
+root_agent = Agent(
+    name="order_support_agent",
+    model="gemini-2.5-flash",
+    instruction="You help customers with orders. Always use tools for order data.",
+    tools=[orders_tools],
+)</code></pre></div>
+        <p>Deploy the <code>orders_mcp.py</code> server from section 02 to Cloud Run with the same container steps shown in step 5, and keep it private.</p>
+        <span class="tag verify">verify: import paths for your ADK version</span>
+      </div>
+
+      <div class="step"><h3>Expose and call agents over A2A</h3>
+        <p><b>Serve.</b> <code>to_a2a</code> wraps an ADK agent in an A2A server and generates the Agent Card from the agent's name, description and tools.</p>
+<div class="codeblock" data-lang="python"><div class="bar"><span>a2a_server.py</span><button type="button">Copy</button></div><pre><code>from google.adk.a2a.utils.agent_to_a2a import to_a2a
+from order_agent.agent import root_agent
+
+a2a_app = to_a2a(root_agent, port=8001)   # ASGI app</code></pre></div>
+<div class="codeblock" data-lang="bash"><div class="bar"><span>bash</span><button type="button">Copy</button></div><pre><code>uvicorn a2a_server:a2a_app --host 0.0.0.0 --port 8001
+curl http://localhost:8001/.well-known/agent-card.json</code></pre></div>
+        <p><b>Call.</b> <code>RemoteA2aAgent</code> lets an orchestrator treat a remote agent like a sub-agent.</p>
+<div class="codeblock" data-lang="python"><div class="bar"><span>orchestrator/agent.py</span><button type="button">Copy</button></div><pre><code>from google.adk.agents import Agent
+from google.adk.agents.remote_a2a_agent import RemoteA2aAgent
+
+orders = RemoteA2aAgent(
+    name="orders",
+    description="Order status and returns specialist.",
+    agent_card="https://orders.example.com/.well-known/agent-card.json",
+)
+
+root_agent = Agent(
+    name="concierge",
+    model="gemini-2.5-flash",
+    instruction="Route order questions to the orders agent. Answer everything else yourself.",
+    sub_agents=[orders],
+)</code></pre></div>
+        <p>Some ADK versions publish the card at <code>agent.json</code> (A2A 0.3). If the card URL 404s, check the server's startup log for the exact path.</p>
+        <span class="tag ok">checked: pattern</span><span class="tag verify">verify: card path for your version</span>
+      </div>
+
+      <div class="step"><h3>Deploy</h3>
+        <p><b>Option A: Agent Runtime</b> (managed, sessions and memory services built in).</p>
+<div class="codeblock" data-lang="bash"><div class="bar"><span>bash</span><button type="button">Copy</button></div><pre><code>PROJECT_ID=MY-PROJECT-ID
+LOCATION_ID=us-central1
+
+adk deploy agent_engine \
+  --project=$PROJECT_ID \
+  --region=$LOCATION_ID \
+  --display_name="Order Support Agent" \
+  order_agent</code></pre></div>
+        <p>The output ends with a resource name <code>projects/.../locations/.../reasoningEngines/RESOURCE_ID</code>. Query it at <code>https://LOCATION_ID-aiplatform.googleapis.com/v1/projects/PROJECT_ID/locations/LOCATION_ID/reasoningEngines/RESOURCE_ID:query</code> or with the Vertex AI Python SDK (<code>vertexai.agent_engines.get(resource_name)</code>).</p>
+        <p><b>Option B: Cloud Run</b> (a normal container, best for A2A and MCP servers you want full control over).</p>
+<div class="codeblock" data-lang="bash"><div class="bar"><span>bash</span><button type="button">Copy</button></div><pre><code>adk deploy cloud_run \
+  --project=$PROJECT_ID \
+  --region=$LOCATION_ID \
+  order_agent
+# When asked "Allow unauthenticated invocations?" answer N (or press Enter).</code></pre></div>
+        <p>Or deploy any container yourself:</p>
+<div class="codeblock" data-lang="bash"><div class="bar"><span>bash</span><button type="button">Copy</button></div><pre><code>gcloud run deploy orders-mcp --source . --region $LOCATION_ID \
+  --no-allow-unauthenticated</code></pre></div>
+        <div class="callout warn"><strong>Do not copy tutorials that say --allow-unauthenticated</strong><p>That flag makes your agent a public endpoint that spends your model budget for anyone who finds it. Keep services private and call them with an identity token (next step). Without session and artifact service URIs, Cloud Run instances keep sessions in memory and lose them on recycle; configure a database-backed session service for anything real.</p></div>
+        <span class="tag ok">checked: commands and flags</span>
+      </div>
+
+      <div class="step"><h3>Identity, secrets and guardrails</h3>
+        <ul>
+          <li><b>Service-to-service calls:</b> give each service its own service account and grant the caller <code>roles/run.invoker</code> on the callee. The caller sends a Google-signed ID token with the callee's URL as audience.</li>
+          <li><b>Secrets:</b> store API keys in Secret Manager, grant <code>roles/secretmanager.secretAccessor</code> to the runtime service account, and inject as environment variables or read at startup. Never ship a <code>.env</code> file in the image.</li>
+          <li><b>Guardrails:</b> put Model Armor in front of prompts and responses to screen for injection and data leakage, and use ADK callbacks to validate tool arguments before they run.</li>
+          <li><b>Agent identity:</b> Agent Runtime supports per-agent identities so IAM policies can name the agent, not a shared account. Check current docs for the setup commands.</li>
+        </ul>
+<div class="codeblock" data-lang="bash"><div class="bar"><span>Call a private Cloud Run MCP server from your laptop</span><button type="button">Copy</button></div><pre><code>TOKEN=$(gcloud auth print-identity-token)
+curl -s https://orders-mcp-xxxx.a.run.app/mcp \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json, text/event-stream" \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}'</code></pre></div>
+<div class="codeblock" data-lang="python"><div class="bar"><span>Programmatic ID token inside a service</span><button type="button">Copy</button></div><pre><code>import google.auth.transport.requests, google.oauth2.id_token
+
+def id_token_for(audience: str) -&gt; str:
+    req = google.auth.transport.requests.Request()
+    return google.oauth2.id_token.fetch_id_token(req, audience)</code></pre></div>
+      </div>
+
+      <div class="step"><h3>Observe and evaluate</h3>
+        <ul>
+          <li><b>Traces:</b> ADK emits OpenTelemetry spans for model calls and tool calls. On Agent Runtime and Cloud Run they flow to Cloud Trace and Cloud Logging once tracing is enabled; use <code>adk web</code> locally to see the same traces.</li>
+          <li><b>Evaluation:</b> write eval sets (input, expected tool calls, reference answer) and run <code>adk eval</code> in CI, so a prompt change that breaks a tool call fails the build.</li>
+          <li><b>Registry:</b> Agent Registry catalogues agents and their A2A skills so other teams can discover them.</li>
+        </ul>
+<div class="codeblock" data-lang="bash"><div class="bar"><span>bash</span><button type="button">Copy</button></div><pre><code>adk eval order_agent order_agent/evals/basic.evalset.json</code></pre></div>
+        <span class="tag verify">verify: tracing flags for your deploy target</span>
+      </div>
+
+      <div class="step"><h3>Gotchas on Google Cloud</h3>
+        <ul>
+          <li>Naming has shifted (Vertex AI Agent Engine, Agent Runtime, Gemini Enterprise Agent Platform). Search docs by both names.</li>
+          <li>The environment variable that switches to enterprise-hosted Gemini was renamed in recent docs; a wrong name silently falls back to API-key mode.</li>
+          <li>The agent folder must contain <code>root_agent</code> and an <code>__init__.py</code> importing the module, or deploy and <code>adk web</code> find nothing.</li>
+          <li>Cloud Run default compute service account needs Cloud Build builder permission for <code>adk deploy cloud_run</code> to succeed.</li>
+          <li>Agent Card version mismatch (0.3 vs 1.0) is the usual cause of "A2A call returns 404 or method not found".</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= AWS ================= -->
+  <div class="cpanel" id="panel-aws" role="tabpanel" hidden>
+    <p>AWS's path pairs <b>Strands Agents</b> (an open-source Python and TypeScript SDK) with <b>Amazon Bedrock AgentCore</b>, a set of managed services: <b>Runtime</b> (hosting), <b>Gateway</b> (turn APIs and Lambdas into MCP tools), <b>Memory</b>, <b>Identity</b>, <b>Observability</b>, <b>Policy</b>, plus <b>Code Interpreter</b> and <b>Browser</b>. You are not locked in: AgentCore Runtime hosts any framework that can speak its protocol.</p>
+    <div class="steps">
+
+      <div class="step"><h3>Set up</h3>
+        <p>You need AWS credentials, Node.js 20 or newer (for the CLI), Python 3.10 or newer, and access to a model in Amazon Bedrock.</p>
+<div class="codeblock" data-lang="bash"><div class="bar"><span>bash</span><button type="button">Copy</button></div><pre><code>aws sts get-caller-identity          # confirm credentials
+npm install -g @aws/agentcore
+
+agentcore create \
+  --project-name OrderSupport --name OrderAgent \
+  --language Python --framework Strands \
+  --model-provider Bedrock --memory none
+cd OrderSupport</code></pre></div>
+        <p>Running <code>agentcore create</code> with no flags opens a wizard, which is the easiest way to see the options, including the protocol (HTTP, MCP or A2A) your agent will speak.</p>
+        <span class="tag ok">checked: install and create</span>
+      </div>
+
+      <div class="step"><h3>Build the agent with a tool</h3>
+        <p>Strands turns a decorated function into a tool and runs the whole loop for you.</p>
+<div class="codeblock" data-lang="python"><div class="bar"><span>app/OrderAgent/main.py  (shape; the CLI scaffolds the real file)</span><button type="button">Copy</button></div><pre><code>from strands import Agent, tool
+from strands.models import BedrockModel
+
+@tool
+def get_order_status(order_id: str) -&gt; dict:
+    """Look up the shipping status of one order by ID.
+    Use when a customer asks where their order is.
+
+    Args:
+        order_id: The order ID, for example "A-1042".
+    """
+    return {"order_id": order_id, "status": "shipped", "eta": "2026-10-22"}
+
+model = BedrockModel(model_id="&lt;a-bedrock-model-id-you-can-use&gt;", streaming=True)
+
+agent = Agent(
+    model=model,
+    system_prompt="You help customers with orders. Always use tools for order data.",
+    tools=[get_order_status],
+)
+
+if __name__ == "__main__":
+    print(agent("Where is order A-1042?"))</code></pre></div>
+<div class="codeblock" data-lang="bash"><div class="bar"><span>bash</span><button type="button">Copy</button></div><pre><code>agentcore dev        # run locally with the same entrypoint the cloud uses</code></pre></div>
+        <span class="tag ok">checked: commands</span><span class="tag verify">verify: scaffolded file layout</span>
+      </div>
+
+      <div class="step"><h3>Add MCP tools, directly or through Gateway</h3>
+        <p><b>Direct MCP server.</b> Strands' <code>MCPClient</code> wraps an MCP connection. Keep tool use inside the context manager so the session stays open.</p>
+<div class="codeblock" data-lang="python"><div class="bar"><span>python</span><button type="button">Copy</button></div><pre><code>from strands import Agent
+from strands.tools.mcp.mcp_client import MCPClient
+from mcp.client.streamable_http import streamablehttp_client
+
+mcp_client = MCPClient(lambda: streamablehttp_client("https://orders-mcp.example.com/mcp"))
+
+with mcp_client:
+    tools = mcp_client.list_tools_sync()
+    agent = Agent(model=model, tools=tools)
+    print(agent("Where is order A-1042?"))</code></pre></div>
+        <p><b>AgentCore Gateway</b> exposes your Lambda functions and APIs as one MCP endpoint with managed auth, so agents never see raw credentials.</p>
+<div class="codeblock" data-lang="bash"><div class="bar"><span>bash</span><button type="button">Copy</button></div><pre><code>agentcore add gateway --name OrderGateway --authorizer-type NONE --runtimes OrderAgent
+
+agentcore add gateway-target --name OrderLambda --type lambda-function-arn \
+  --lambda-arn arn:aws:lambda:REGION:ACCOUNT:function:get-order-status \
+  --tool-schema-file tools.json \
+  --gateway OrderGateway
+
+agentcore deploy
+agentcore status      # prints the gateway URL
+# Gateway MCP URL pattern:
+# https://GATEWAY_ID.gateway.bedrock-agentcore.REGION.amazonaws.com/mcp</code></pre></div>
+        <div class="callout warn"><strong>NONE is for your first test only</strong><p>For anything beyond a sandbox use <code>--authorizer-type CUSTOM_JWT</code> with <code>--discovery-url</code> (your OIDC provider's openid-configuration, such as Cognito, Okta or Entra) and <code>--allowed-audience</code>. Clients then send <code>Authorization: Bearer &lt;token&gt;</code>.</p></div>
+        <p>When Gateway uses JWT auth, add the token to the transport:</p>
+<div class="codeblock" data-lang="python"><div class="bar"><span>python</span><button type="button">Copy</button></div><pre><code>mcp_client = MCPClient(lambda: streamablehttp_client(
+    GATEWAY_URL, headers={"Authorization": f"Bearer {access_token}"}))</code></pre></div>
+        <span class="tag ok">checked: Gateway CLI and URL</span><span class="tag verify">verify: tools.json schema format</span>
+      </div>
+
+      <div class="step"><h3>Expose and call agents over A2A</h3>
+        <p>AgentCore Runtime supports an A2A protocol mode. The runtime serves A2A on port <b>9000</b> at <code>/</code>, MCP on port 8000 at <code>/mcp</code>, and plain HTTP on 8080 at <code>/invocations</code>. Choose A2A when you create the project; the scaffolded entrypoint wraps your Strands agent with an A2A executor.</p>
+        <p>If you are not using the scaffold, Strands ships its own A2A server that works in any container:</p>
+<div class="codeblock" data-lang="python"><div class="bar"><span>a2a_server.py  (pip install &quot;strands-agents[a2a]&quot;)</span><button type="button">Copy</button></div><pre><code>from strands import Agent
+from strands.multiagent.a2a import A2AServer
+
+agent = Agent(
+    name="Order Support Agent",
+    description="Answers order status questions.",
+    tools=[get_order_status],
+)
+
+server = A2AServer(agent=agent, host="0.0.0.0", port=9000)
+server.serve()      # Agent Card is served at /.well-known/agent-card.json</code></pre></div>
+        <p>Calling a deployed AgentCore agent uses its runtime ARN. The exact URL, headers and session header are documented per protocol:</p>
+<div class="codeblock" data-lang="bash"><div class="bar"><span>shape of a remote call  (verify header names in the AgentCore A2A docs)</span><button type="button">Copy</button></div><pre><code># 1) Fetch the card
+curl -s "https://bedrock-agentcore.REGION.amazonaws.com/runtimes/ENCODED_ARN/invocations/.well-known/agent-card.json" \
+  -H "Authorization: Bearer $TOKEN"
+
+# 2) Send a message (A2A JSON-RPC, 0.3 style as in current AWS examples)
+curl -s "https://bedrock-agentcore.REGION.amazonaws.com/runtimes/ENCODED_ARN/invocations/" \
+  -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","id":"1","method":"message/send","params":{"message":{"role":"user","messageId":"m1","parts":[{"kind":"text","text":"Where is order A-1042?"}]}}}'
+# ENCODED_ARN is the runtime ARN, URL-encoded.</code></pre></div>
+        <p>To call any A2A agent from Python on any cloud, use the open-source <code>a2a-sdk</code> client, or the plain HTTP calls shown in section 02. Both work against AgentCore, Cloud Run and OCI alike.</p>
+        <span class="tag ok">checked: ports and paths</span><span class="tag verify">verify: remote URL and headers</span>
+      </div>
+
+      <div class="step"><h3>Deploy</h3>
+<div class="codeblock" data-lang="bash"><div class="bar"><span>bash</span><button type="button">Copy</button></div><pre><code>agentcore deploy     # synthesizes a CDK stack: runtime, gateway, targets, roles
+agentcore status
+aws logs tail /aws/bedrock-agentcore/runtimes/RUNTIME_ID --follow   # confirm the exact log group in status output</code></pre></div>
+        <p>Deploy takes a few minutes. Remove everything with <code>agentcore remove all</code> followed by <code>agentcore deploy</code>.</p>
+        <p><b>If you prefer plain containers,</b> Strands agents run on ECS Fargate or EKS behind an ALB, and on Lambda for short, stateless agents (15-minute limit). Choose containers when you need long-lived connections, custom networking, or you are already standardised on them.</p>
+        <span class="tag ok">checked: deploy and cleanup</span>
+      </div>
+
+      <div class="step"><h3>Identity, secrets and guardrails</h3>
+        <ul>
+          <li><b>Inbound auth:</b> AgentCore Runtime accepts AWS SigV4 (IAM) or OAuth/JWT. Use IAM for AWS-to-AWS calls and JWT for anything crossing accounts, clouds or customers.</li>
+          <li><b>Outbound auth:</b> AgentCore Identity stores OAuth credentials for third-party APIs and supports on-behalf-of-user flows, so the agent acts with the user's permissions, not a super-user key.</li>
+          <li><b>Secrets:</b> AWS Secrets Manager, read via the runtime's execution role. Never bake keys into the image or the agent's system prompt.</li>
+          <li><b>Guardrails:</b> Amazon Bedrock Guardrails filter content, deny topics, redact PII and check grounding; apply them to the model and to tool responses. AgentCore Policy lets you restrict which tools an agent may call.</li>
+          <li><b>Least privilege:</b> the execution role should list the exact Lambda ARNs, secrets and models the agent needs, nothing more.</li>
+        </ul>
+      </div>
+
+      <div class="step"><h3>Observe and evaluate</h3>
+        <ul>
+          <li>AgentCore Observability emits OpenTelemetry traces to CloudWatch's generative AI dashboards, with spans for model calls, tool calls and memory access.</li>
+          <li>Add the AWS Distro for OpenTelemetry (ADOT) package to your container if you host outside the scaffold.</li>
+          <li>Build an evaluation set and run it in CI against a dev deployment before promoting to prod.</li>
+        </ul>
+      </div>
+
+      <div class="step"><h3>Gotchas on AWS</h3>
+        <ul>
+          <li>Model access: "access denied" on first call usually means you have not enabled that model in Bedrock for your region and account.</li>
+          <li>Gateway needs 30 to 60 seconds after creation before DNS resolves. Retry before debugging.</li>
+          <li>Gateway tool lists are paginated; follow the pagination token or your agent sees only the first page of tools.</li>
+          <li>Different protocol, different port and path. A2A agents answering on 8080 or MCP servers answering on 9000 will fail health checks.</li>
+          <li>AWS docs for A2A still show the 0.3 wire format; if your orchestrator speaks 1.0, check for version negotiation or use a 0.3-compatible client.</li>
+          <li>Lambda is the wrong home for streaming or long tasks. Use AgentCore Runtime or Fargate.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= OCI ================= -->
+  <div class="cpanel" id="panel-oci" role="tabpanel" hidden>
+    <p>Oracle's path has three layers. The <b>OCI Generative AI Responses API</b> is an OpenAI-compatible endpoint with built-in tools (file search, code interpreter, function calling, and <b>remote MCP calling</b>) and managed conversation memory. <b>OCI Agent Development Kit (ADK)</b> and open frameworks (LangGraph, AutoGen, LangChain) cover custom logic. For data work, the <b>Autonomous AI Database MCP Server</b> lets agents query your database through governed tools. If you run Oracle Fusion Applications, <b>AI Agent Studio</b> adds ready-made agents that speak MCP and A2A.</p>
+    <div class="steps">
+
+      <div class="step"><h3>Set up</h3>
+        <p>You need an OCI tenancy, a compartment, a region where Generative AI is available, and Python 3.10 or newer. Create a Generative AI <b>project</b> in the console (it holds retention and memory settings) and note its OCID. Then either create a Generative AI API key, or use IAM authentication.</p>
+<div class="codeblock" data-lang="bash"><div class="bar"><span>bash</span><button type="button">Copy</button></div><pre><code>python -m venv .venv &amp;&amp; source .venv/bin/activate
+pip install openai
+pip install oci-genai-auth     # IAM auth helpers for the OpenAI client</code></pre></div>
+        <p>Allow your user or dynamic group to use the service with an IAM policy in the compartment, for example <code>allow group AgentDevs to use generative-ai-family in compartment MyCompartment</code> (check the policy reference for the exact resource names your tenancy needs).</p>
+        <span class="tag ok">checked: packages</span><span class="tag verify">verify: policy statement</span>
+      </div>
+
+      <div class="step"><h3>Call a model and keep state</h3>
+        <p>Use the standard OpenAI SDK, pointed at your region's endpoint. The Responses API manages conversation state for you through <code>previous_response_id</code>.</p>
+<div class="codeblock" data-lang="python"><div class="bar"><span>hello_oci.py</span><button type="button">Copy</button></div><pre><code>from openai import OpenAI
+
+REGION = "us-chicago-1"   # a region where Generative AI is available to you
+
+client = OpenAI(
+    base_url=f"https://inference.generativeai.{REGION}.oci.oraclecloud.com/openai/v1",
+    api_key="&lt;your-generative-ai-api-key&gt;",
+    project="&lt;your-project-ocid&gt;",
+)
+
+r1 = client.responses.create(
+    model="xai.grok-4-1-fast-reasoning",   # or google.gemini-2.5-flash, openai.gpt-oss-120b, ...
+    input="My order is A-1042. Remember that.",
+)
+print(r1.output_text)
+
+r2 = client.responses.create(
+    model="xai.grok-4-1-fast-reasoning",
+    input="What was my order ID?",
+    previous_response_id=r1.id,             # service-managed state
+)
+print(r2.output_text)</code></pre></div>
+        <p><b>IAM authentication</b> (recommended for production) sets <code>api_key="not-used"</code> and passes an HTTP client that signs requests with OCI credentials. The helper offers user-principal, session-token and resource-principal variants; use <b>resource principal</b> when the code runs inside OCI.</p>
+<div class="codeblock" data-lang="python"><div class="bar"><span>python</span><button type="button">Copy</button></div><pre><code>import httpx
+from openai import OpenAI
+from oci_openai import OciResourcePrincipalAuth   # module name per the docs' examples
+
+client = OpenAI(
+    base_url=f"https://inference.generativeai.{REGION}.oci.oraclecloud.com/openai/v1",
+    api_key="not-used",
+    project="&lt;your-project-ocid&gt;",
+    http_client=httpx.Client(auth=OciResourcePrincipalAuth()),
+)</code></pre></div>
+        <span class="tag ok">checked: endpoint, call shape, state</span><span class="tag verify">verify: helper package vs module name</span>
+        <div class="callout"><strong>Project memory</strong><p>Projects can enable short-term memory compaction (summarises recent history to save tokens) and long-term memory (extracts facts into embeddings). Both are chosen at project creation with specific models and cannot be turned off later without deleting the project, so decide deliberately. Retention for responses and conversations is configurable up to 720 hours.</p></div>
+      </div>
+
+      <div class="step"><h3>Add tools: functions and remote MCP</h3>
+        <p>Two ways to give the agent tools. <b>Function calling:</b> you run the tool and return the result (full control, same pattern as the loop in section 01). <b>MCP calling:</b> OCI calls your remote MCP server for you during the request, saving a round trip.</p>
+<div class="codeblock" data-lang="python"><div class="bar"><span>python</span><button type="button">Copy</button></div><pre><code>resp = client.responses.create(
+    model="openai.gpt-oss-120b",
+    tools=[{
+        "type": "mcp",
+        "server_label": "orders",
+        "server_description": "Order lookups for support.",
+        "server_url": "https://orders-mcp.example.com/mcp",   # must be reachable by OCI over HTTPS
+        "allowed_tools": ["get_order_status"],               # least privilege
+        "require_approval": "never",                          # use only for read-only tools
+        "authorization": "&lt;raw-access-token&gt;",                # token only, no "Bearer " prefix
+    }],
+    input="Where is order A-1042?",
+)
+print(resp.output_text)</code></pre></div>
+        <ul>
+          <li>The server must be reachable from OCI's service network over public HTTPS, so protect it with a token and an allow-list, not by hiding the URL.</li>
+          <li>Tool support in the Responses API is available through the API only, and the model decides whether to use a tool.</li>
+          <li>Other built-in tools: <code>file_search</code> (vector stores), <code>code_interpreter</code> (managed Python sandbox).</li>
+        </ul>
+        <span class="tag ok">checked: field names and token rule</span>
+      </div>
+
+      <div class="step"><h3>Give agents your data with the Autonomous Database MCP Server</h3>
+        <p>Autonomous AI Database can expose an MCP endpoint, so agents query data where it lives under the database's own security. Enable it with a free-form tag on the instance, then register Select AI Agent tools.</p>
+        <ol>
+          <li>In the console, add a free-form tag to the Autonomous AI Database Serverless instance. Name: <code>adb$feature</code>. Value: <code>{"name":"mcp_server","enable":true}</code>.</li>
+          <li>The endpoint is <code>https://dataaccess.adb.REGION.oraclecloudapps.com/adb/mcp/v1/databases/DATABASE_OCID</code>. Private-endpoint databases get a prefixed hostname and are reachable only inside your VCN.</li>
+          <li>Create a tool with <code>DBMS_CLOUD_AI_AGENT.CREATE_TOOL</code>, backed by a PL/SQL function. Oracle's walkthrough uses a paginated <code>RUN_SQL</code> function with <code>QUERY</code>, <code>OFFSET</code> and <code>LIMIT</code> inputs, where the query must be a SELECT with no trailing semicolon.</li>
+          <li>Connect with a bearer token. Point the Responses API MCP tool above, or the OCI ADK below, at the endpoint.</li>
+        </ol>
+        <div class="callout warn"><strong>Do not hand an agent free-form SQL on a production schema</strong><p>Run it as a read-only database user, expose views instead of base tables, cap row counts, and prefer narrow tools ("monthly revenue by region") over a generic SQL runner.</p></div>
+        <span class="tag ok">checked: tag, endpoint, tool pattern</span><span class="tag verify">verify: full CREATE_TOOL syntax in Oracle's blog</span>
+      </div>
+
+      <div class="step"><h3>Build with OCI ADK and expose over A2A</h3>
+        <p>OCI ADK is Oracle's agent SDK for the Generative AI Agents service. It supports an approval hook for tool calls and MCP toolkits.</p>
+<div class="codeblock" data-lang="bash"><div class="bar"><span>bash</span><button type="button">Copy</button></div><pre><code>pip install "oci[adk]"      # Python 3.10+</code></pre></div>
+<div class="codeblock" data-lang="python"><div class="bar"><span>shape of an OCI ADK agent with the database MCP server  (illustrative)</span><button type="button">Copy</button></div><pre><code># Imports and exact class paths: copy from Oracle's "OCI ADK with Autonomous AI
+# Database MCP Server" blog post; they change between ADK releases.
+#
+# 1. Read the bearer token from an environment variable, fail if missing.
+# 2. Open a Streamable HTTP MCP client to the database MCP endpoint, with
+#    an Authorization header.
+# 3. Create an AgentClient (auth type, profile, region).
+# 4. Subclass Agent to override required-action handling: show each proposed
+#    tool call to the user and record a denial if they decline.
+# 5. agent = MyAgent(client=..., agent_endpoint_id="&lt;Agent Endpoint OCID&gt;",
+#                    instructions="...", tools=[mcp_toolkit])
+# 6. agent.setup()           # syncs tools and instructions
+# 7. response = await agent.run_async("Top 5 customers by revenue?")</code></pre></div>
+        <span class="tag verify">verify: illustrative, copy final code from Oracle's blog</span>
+        <p><b>A2A on OCI.</b> For your own agents, run any A2A server (for example the open-source <code>a2a-sdk</code> with FastAPI, or LangGraph's A2A support) as a container, and publish the Agent Card on the same host. Front it with API Gateway and your identity domain so callers present a JWT. Oracle AI Agent Studio in Fusion Applications already supports MCP and A2A, so Fusion agents can call yours and yours can call them through the same protocol.</p>
+        <p>The plain HTTP A2A examples in section 02 work unchanged against an agent you host on OCI.</p>
+      </div>
+
+      <div class="step"><h3>Deploy</h3>
+        <p><b>Hosted applications</b> in the Generative AI service run your agent container with managed scaling, storage, VCN networking and an IAM identity domain. The flow is: build a container, push it to Oracle Cloud Infrastructure Registry (OCIR), create the application, then create a deployment from the image.</p>
+<div class="codeblock" data-lang="bash"><div class="bar"><span>bash</span><button type="button">Copy</button></div><pre><code>REGION_KEY=ord          # OCIR region key, for example ord for us-chicago-1
+NS=your_tenancy_namespace
+
+docker build -t agent:1.0 .
+docker login $REGION_KEY.ocir.io -u "$NS/your.user@example.com"   # password: auth token
+docker tag  agent:1.0 $REGION_KEY.ocir.io/$NS/order-agent:1.0
+docker push $REGION_KEY.ocir.io/$NS/order-agent:1.0</code></pre></div>
+        <p>Create the hosted application and deployment from the console (Generative AI, Hosted applications) or the OCI CLI, pointing at that image. Set the container port, health check, environment variables and scaling there. Alternatives when you want the platform you already run: <b>OKE</b> (Kubernetes), <b>Container Instances</b>, <b>Functions</b> for short stateless agents, or <b>Compute</b>.</p>
+        <span class="tag ok">checked: container flow</span><span class="tag verify">verify: create-application CLI or console fields</span>
+      </div>
+
+      <div class="step"><h3>Identity, secrets and guardrails</h3>
+        <ul>
+          <li><b>Workload identity:</b> use resource principals (dynamic groups plus policies) so your container needs no stored credentials.</li>
+          <li><b>Secrets:</b> OCI Vault. Read secrets at startup through the resource principal.</li>
+          <li><b>Network:</b> keep agents and MCP servers in private subnets; expose only through API Gateway or a load balancer with WAF.</li>
+          <li><b>Content safety:</b> use the Generative AI service guardrails for content moderation, prompt-injection and PII checks, and add your own validation before write actions.</li>
+          <li><b>Data access:</b> for database agents rely on database roles and Virtual Private Database policies so the agent cannot see what the user could not.</li>
+        </ul>
+      </div>
+
+      <div class="step"><h3>Observe and evaluate</h3>
+        <ul>
+          <li>Send application logs to OCI Logging and traces to OCI Application Performance Monitoring using OpenTelemetry exporters.</li>
+          <li>Set alarms on error rate, latency and token consumption in OCI Monitoring.</li>
+          <li>Keep a fixed evaluation set and run it after every prompt, model or tool change.</li>
+        </ul>
+      </div>
+
+      <div class="step"><h3>Gotchas on Oracle Cloud</h3>
+        <ul>
+          <li>Model availability varies by region and by on-demand versus dedicated mode. In dedicated mode the <code>model</code> value is your cluster endpoint OCID and the request must go to that cluster's region.</li>
+          <li>The Responses API <code>authorization</code> field takes the raw token. Including "Bearer " is a common cause of 401s.</li>
+          <li>Memory settings on a project are one-way decisions.</li>
+          <li>The older <code>/20231130/actions/v1</code> inference path appears in earlier tutorials; current docs use <code>/openai/v1</code>. Use the one your docs page shows.</li>
+          <li>OCIR login uses the tenancy namespace and an auth token, not your console password.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div></section>
+
+<!-- ============ 05 CROSS-CLOUD ============ -->
+<section class="sec" id="crosscloud"><div class="wrap">
+  <div class="secnum">05</div>
+  <h2>Cross-cloud agent flows</h2>
+  <p class="intro">Real companies have data on one cloud, apps on another and a SaaS vendor on a third. A2A is designed for exactly this: each agent stays where its data and team live, and the card is the contract.</p>
+
+  <div class="diagram">
+    <svg viewBox="0 0 900 300" role="img" aria-label="Orchestrator on Google Cloud calls an agent on AWS and an agent on Oracle Cloud over A2A, authenticated by a shared identity provider">
+      <defs><marker id="ar4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="currentColor" style="color:var(--fg)"/></marker></defs>
+      <rect class="bx g" x="20" y="100" width="230" height="96" rx="12"/><text x="135" y="132" text-anchor="middle">Orchestrator</text><text class="s" x="135" y="152" text-anchor="middle">ADK on Agent Runtime</text><text class="m" x="135" y="176" text-anchor="middle">GOOGLE CLOUD</text>
+      <rect class="bx w" x="650" y="20" width="230" height="96" rx="12"/><text x="765" y="52" text-anchor="middle">Operations agent</text><text class="s" x="765" y="72" text-anchor="middle">Strands on AgentCore</text><text class="m" x="765" y="96" text-anchor="middle">AWS</text>
+      <rect class="bx o" x="650" y="184" width="230" height="96" rx="12"/><text x="765" y="216" text-anchor="middle">Data agent</text><text class="s" x="765" y="236" text-anchor="middle">OCI ADK + Autonomous DB MCP</text><text class="m" x="765" y="260" text-anchor="middle">ORACLE CLOUD</text>
+      <path class="ln dash" d="M250 130L648 74" marker-end="url(#ar4)"/><path class="ln dash" d="M250 168L648 226" marker-end="url(#ar4)"/>
+      <text class="m" x="440" y="92" text-anchor="middle">A2A over HTTPS + JWT</text><text class="m" x="440" y="214" text-anchor="middle">A2A over HTTPS + JWT</text>
+      <rect class="bx a" x="330" y="128" width="170" height="40" rx="20"/><text x="415" y="153" text-anchor="middle">Shared identity provider</text>
+    </svg>
+  </div>
+
+  <h3>Making it work</h3>
+  <div class="grid2">
+    <div class="card"><h4>1 · Agree on the A2A version</h4><p>Fetch each Agent Card and read its protocol version. Pin all agents to one version, or put a thin adapter in front of the old ones.</p></div>
+    <div class="card"><h4>2 · One identity story</h4><p>Use an OIDC provider all three clouds trust (Okta, Entra ID, Cognito, OCI IAM identity domain, Google identity). The caller gets a short-lived token via client-credentials and each agent validates issuer, audience and scope.</p></div>
+    <div class="card"><h4>3 · Prefer federation to keys</h4><p>Where a workload on one cloud needs to call a cloud API on another, use workload identity federation (GCP, AWS and OCI all support trusting an external OIDC identity) instead of copying long-lived keys.</p></div>
+    <div class="card"><h4>4 · Treat the network as hostile</h4><p>TLS everywhere, allow-lists on the callee, WAF or API gateway in front, rate limits per caller, and request size caps.</p></div>
+    <div class="card"><h4>5 · Propagate trace context</h4><p>Pass W3C <code>traceparent</code> on every A2A call so one user request shows as one trace across three clouds in your observability tool.</p></div>
+    <div class="card"><h4>6 · Design for partial failure</h4><p>Every remote call gets a timeout, a retry budget and a fallback answer. Return what you have and say what is missing.</p></div>
+  </div>
+
+<div class="codeblock" data-lang="python"><div class="bar"><span>orchestrator that talks to three clouds (ADK, shape)</span><button type="button">Copy</button></div><pre><code>from google.adk.agents import Agent
+from google.adk.agents.remote_a2a_agent import RemoteA2aAgent
+
+ops_aws = RemoteA2aAgent(
+    name="ops_aws",
+    description="Creates tickets and runs operational workflows (hosted on AWS).",
+    agent_card="https://ops.example.com/.well-known/agent-card.json",
+)
+data_oci = RemoteA2aAgent(
+    name="data_oci",
+    description="Answers questions from the finance database (hosted on Oracle Cloud).",
+    agent_card="https://data.example.com/.well-known/agent-card.json",
+)
+
+root_agent = Agent(
+    name="concierge",
+    model="gemini-2.5-flash",
+    instruction=(
+        "Route data questions to data_oci and operational requests to ops_aws. "
+        "If a specialist is unavailable, say so and do not guess."
+    ),
+    sub_agents=[ops_aws, data_oci],
+)
+# Authentication: configure the RemoteA2aAgent's HTTP client to attach a bearer token.
+# Parameter names for that vary by ADK release, so check the current ADK reference.</code></pre></div>
+
+  <div class="callout"><strong>Where it breaks in practice</strong><p>Most cross-cloud failures are not protocol bugs. They are expired tokens, mismatched audiences, card URLs that point at internal hostnames, and timeouts shorter than the remote agent's real latency. Test each hop with <code>curl</code> before you test the chain.</p></div>
+</div></section>
+
+<!-- ============ 06 SECURITY ============ -->
+<section class="sec" id="security"><div class="wrap">
+  <div class="secnum">06</div>
+  <h2>Security and governance</h2>
+  <p class="intro">An agent is software that reads untrusted text and then takes actions. That combination needs more care than a normal API.</p>
+
+  <div class="tablewrap"><table>
+    <thead><tr><th>Threat</th><th>How it happens</th><th>Defences</th></tr></thead>
+    <tbody>
+      <tr><td><b>Prompt injection</b></td><td>A web page, email, document or tool result contains instructions the model obeys.</td><td>Treat all retrieved content as data, not commands. Require approval for risky actions. Separate "read" agents from "write" agents. Use cloud guardrails on inputs and outputs.</td></tr>
+      <tr><td><b>Tool misuse</b></td><td>The model calls a tool with harmful arguments, or calls one it should not.</td><td>Validate arguments in code. Narrow tools. Allow-list tools per agent. Rate limit and cap amounts.</td></tr>
+      <tr><td><b>Privilege escalation</b></td><td>One agent holds broad credentials and is tricked into using them.</td><td>Per-agent identity, least privilege, on-behalf-of-user tokens, short-lived credentials.</td></tr>
+      <tr><td><b>Memory poisoning</b></td><td>False facts are written into long-term memory and reused later.</td><td>Write to memory only from trusted flows, tag provenance, expire entries, allow review and deletion.</td></tr>
+      <tr><td><b>Malicious tool descriptions</b></td><td>An untrusted MCP server ships tool descriptions that steer the model.</td><td>Only connect servers you own or vet. Pin versions. Review tool descriptions on update.</td></tr>
+      <tr><td><b>Agent Card abuse</b></td><td>A card claims skills it lacks, or points to an attacker's URL.</td><td>Fetch cards only from allow-listed hosts over TLS. Verify signed cards where supported. Never auto-trust a newly discovered agent.</td></tr>
+      <tr><td><b>Data exfiltration</b></td><td>The agent is induced to send sensitive data to an external tool or URL.</td><td>Egress allow-lists, DLP or PII redaction, no open web tools next to sensitive data.</td></tr>
+      <tr><td><b>Runaway cost</b></td><td>Loops, huge contexts or a public endpoint burn budget.</td><td>Step limits, token budgets, per-caller quotas, billing alerts, authenticated endpoints only.</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>Fix these patterns when you copy tutorials</h3>
+  <ul>
+    <li><b>Keyword filters as a safety layer.</b> A list of banned words is not a defence. Use a real guardrail service plus argument validation and approvals.</li>
+    <li><b>Unauthenticated deploys.</b> Remove <code>--allow-unauthenticated</code> and equivalents. Put identity in front of every agent and MCP server.</li>
+    <li><b>Secrets in <code>.env</code> files or code.</b> Use Secret Manager, Secrets Manager or OCI Vault with a workload identity.</li>
+    <li><b>One god-mode service account.</b> One identity per agent, each with its own narrow permissions.</li>
+    <li><b>No audit trail.</b> Log every tool call with caller, arguments (redacted), result status and trace ID.</li>
+  </ul>
+
+  <h3>Human-in-the-loop, done properly</h3>
+  <p>Classify tools by blast radius. <b>Read-only</b> tools can run freely. <b>Reversible writes</b> (add a comment) can run with logging. <b>Irreversible or costly actions</b> (refund, send email, delete, deploy) pause for approval, and the approval screen must show the exact arguments, not the model's summary of them. In A2A this maps to the <b>input-required</b> task state; in OCI ADK and ADK/Strands it is a callback or hook before the tool runs.</p>
+</div></section>
+
+<!-- ============ 07 PRODUCTION ============ -->
+<section class="sec" id="production"><div class="wrap">
+  <div class="secnum">07</div>
+  <h2>From demo to production</h2>
+  <p class="intro">Most agent projects stall between "works on my laptop" and "I trust it with customers". Close that gap with evaluation, observability and a boring release process.</p>
+
+  <h3>Evaluate before you ship, and after every change</h3>
+  <ol>
+    <li><b>Build a golden set.</b> 30 to 100 real requests with expected tool calls and acceptable answers. Include failure cases: missing information, tool errors, hostile input.</li>
+    <li><b>Score three things.</b> Did it choose the right tools in the right order (trajectory)? Is the final answer correct and grounded? Did it stay inside policy?</li>
+    <li><b>Use model judges carefully.</b> A judge model is useful for tone and completeness but must be calibrated against human labels on a sample.</li>
+    <li><b>Run in CI.</b> A prompt, model or tool-description change that lowers the score blocks the merge.</li>
+    <li><b>Sample production traffic</b> back into the golden set every week.</li>
+  </ol>
+
+  <h3>What to measure</h3>
+  <div class="grid2">
+    <div class="card"><h4>Quality</h4><p>Task success rate, tool-call accuracy, escalation rate, thumbs-down rate, groundedness.</p></div>
+    <div class="card"><h4>Speed</h4><p>P50 and P95 latency per step and end to end, time to first token, tool latency by tool.</p></div>
+    <div class="card"><h4>Cost</h4><p>Tokens per task, model calls per task, cost per successful task, cache hit rate.</p></div>
+    <div class="card"><h4>Safety</h4><p>Guardrail blocks, refused approvals, anomalous tool use, cross-agent call volume.</p></div>
+  </div>
+
+  <h3>Release process</h3>
+  <ul>
+    <li>Version prompts, tool descriptions and Agent Cards in Git like code.</li>
+    <li>Promote through dev, staging and prod with the evaluation gate between each.</li>
+    <li>Ship behind a flag or to a small percentage of traffic first, and keep a one-command rollback.</li>
+    <li>Pin model versions. Re-run evaluations before moving to a newer model.</li>
+  </ul>
+
+  <h3>Launch checklist</h3>
+  <p>Your ticks are saved in this browser only.</p>
+  <div class="progress" aria-hidden="true"><i id="prog"></i></div>
+  <ul class="check" id="checklist">
+    <li data-id="c1"><input type="checkbox" id="c1"><span>Every agent and MCP server requires authentication; none is public by accident.</span></li>
+    <li data-id="c2"><input type="checkbox" id="c2"><span>Each agent has its own identity with least-privilege permissions.</span></li>
+    <li data-id="c3"><input type="checkbox" id="c3"><span>No secrets in code, images or prompts; secrets come from a managed vault.</span></li>
+    <li data-id="c4"><input type="checkbox" id="c4"><span>Step limit, timeout and token budget set on every agent loop.</span></li>
+    <li data-id="c5"><input type="checkbox" id="c5"><span>Tools are narrow, validated in code, and each agent has 5 or fewer.</span></li>
+    <li data-id="c6"><input type="checkbox" id="c6"><span>Irreversible actions require human approval showing exact arguments.</span></li>
+    <li data-id="c7"><input type="checkbox" id="c7"><span>Guardrails on inputs and outputs, tested with injection examples.</span></li>
+    <li data-id="c8"><input type="checkbox" id="c8"><span>Golden evaluation set exists and runs in CI.</span></li>
+    <li data-id="c9"><input type="checkbox" id="c9"><span>Traces, logs and cost metrics visible, with alerts on errors and spend.</span></li>
+    <li data-id="c10"><input type="checkbox" id="c10"><span>Trace context propagates across every agent hop.</span></li>
+    <li data-id="c11"><input type="checkbox" id="c11"><span>A2A versions and Agent Cards verified between all agents.</span></li>
+    <li data-id="c12"><input type="checkbox" id="c12"><span>Rollback tested; prompts, tools and cards are versioned.</span></li>
+    <li data-id="c13"><input type="checkbox" id="c13"><span>Data retention, memory deletion and audit logging meet your policy.</span></li>
+  </ul>
+</div></section>
+
+<!-- ============ 08 COMPARE ============ -->
+<section class="sec" id="compare"><div class="wrap">
+  <div class="secnum">08</div>
+  <h2>Comparing the three platforms</h2>
+  <p class="intro">All three can build the same system. They differ in where they are strongest and how much they manage for you.</p>
+
+  <div class="tablewrap"><table>
+    <thead><tr><th>Dimension</th><th class="gcp">Google Cloud</th><th class="aws">AWS</th><th class="oci">Oracle Cloud</th></tr></thead>
+    <tbody>
+      <tr><td><b>Primary framework</b></td><td>ADK (Python, Java, Go, TypeScript)</td><td>Strands Agents (Python, TypeScript); any framework on AgentCore</td><td>OCI ADK; LangGraph, LangChain, AutoGen; OpenAI SDK against Responses API</td></tr>
+      <tr><td><b>Managed hosting</b></td><td>Agent Runtime, Cloud Run, GKE</td><td>AgentCore Runtime, Fargate, EKS, Lambda</td><td>Hosted applications, OKE, Container Instances, Functions</td></tr>
+      <tr><td><b>MCP support</b></td><td>MCPToolset in ADK; managed remote MCP servers for Google services</td><td>Strands MCPClient; AgentCore Gateway turns APIs and Lambdas into MCP</td><td>Remote MCP calling in Responses API; Autonomous AI Database MCP Server</td></tr>
+      <tr><td><b>A2A support</b></td><td>Native: to_a2a, RemoteA2aAgent, Agent Registry</td><td>Strands A2AServer; AgentCore Runtime A2A mode</td><td>Run any A2A server in your container; AI Agent Studio speaks A2A for Fusion</td></tr>
+      <tr><td><b>Models</b></td><td>Gemini, plus partner models in Model Garden</td><td>Many providers via Bedrock, including Anthropic, Amazon, Meta, Mistral and others</td><td>Cohere, Meta, xAI, Google, OpenAI open-weight models via Generative AI service</td></tr>
+      <tr><td><b>Memory</b></td><td>Session and memory services in Agent Runtime</td><td>AgentCore Memory (short and long term)</td><td>Project short-term compaction and long-term memory in Responses API</td></tr>
+      <tr><td><b>Identity</b></td><td>IAM, service accounts, per-agent identity</td><td>IAM, SigV4, JWT, AgentCore Identity with on-behalf-of flows</td><td>IAM identity domains, resource principals, dynamic groups</td></tr>
+      <tr><td><b>Guardrails</b></td><td>Model Armor</td><td>Bedrock Guardrails, AgentCore Policy</td><td>Generative AI service guardrails</td></tr>
+      <tr><td><b>Observability</b></td><td>Cloud Trace, Logging, ADK telemetry</td><td>CloudWatch GenAI observability via OpenTelemetry</td><td>Logging, APM, Monitoring</td></tr>
+      <tr><td><b>Standout strength</b></td><td>Deepest A2A integration, strong data and analytics stack</td><td>Broadest managed agent services and model choice, Gateway for existing APIs</td><td>Agents next to enterprise data (Autonomous DB, Fusion apps), OpenAI-compatible API</td></tr>
+      <tr><td><b>Watch for</b></td><td>Product renames; env var changes</td><td>A2A docs still on 0.3; many services to learn</td><td>Fewer agent-specific managed features; one-way memory settings</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>Which cloud should I start on?</h3>
+  <p>A quick scorer. It reflects the table above, so use it to start a conversation, not to end one.</p>
+  <div class="quiz" id="quiz">
+    <div class="q"><p>1. Where does the data your agent needs live?</p>
+      <label><input type="radio" name="q1" value="gcp"> BigQuery / Google Workspace</label>
+      <label><input type="radio" name="q1" value="aws"> S3, DynamoDB, RDS, AWS APIs</label>
+      <label><input type="radio" name="q1" value="oci"> Oracle Database / Fusion apps</label>
+      <label><input type="radio" name="q1" value="none"> Spread out or unsure</label></div>
+    <div class="q"><p>2. What does your team already run?</p>
+      <label><input type="radio" name="q2" value="gcp"> GCP</label>
+      <label><input type="radio" name="q2" value="aws"> AWS</label>
+      <label><input type="radio" name="q2" value="oci"> OCI</label>
+      <label><input type="radio" name="q2" value="none"> Nothing yet</label></div>
+    <div class="q"><p>3. Biggest priority?</p>
+      <label><input type="radio" name="q3" value="gcp"> Multi-agent and A2A first</label>
+      <label><input type="radio" name="q3" value="aws"> Model choice and managed building blocks</label>
+      <label><input type="radio" name="q3" value="oci"> Agents on enterprise data with strict governance</label>
+      <label><input type="radio" name="q3" value="none"> Lowest effort</label></div>
+    <div class="q"><p>4. Do you need to wrap many existing REST APIs or Lambdas as tools?</p>
+      <label><input type="radio" name="q4" value="aws"> Yes, many</label>
+      <label><input type="radio" name="q4" value="none"> A few</label></div>
+    <div class="q"><p>5. Are you using Oracle Fusion Applications (ERP, HCM, CX)?</p>
+      <label><input type="radio" name="q5" value="oci"> Yes</label>
+      <label><input type="radio" name="q5" value="none"> No</label></div>
+    <div class="result" id="quizres" aria-live="polite"></div>
+  </div>
+  <div class="callout ok"><strong>Not an either-or</strong><p>If your answers split, that is the case for A2A: put each agent next to its data and connect them as in section 05.</p></div>
+</div></section>
+
+<!-- ============ 09 REFERENCE ============ -->
+<section class="sec" id="reference"><div class="wrap">
+  <div class="secnum">09</div>
+  <h2>Glossary, troubleshooting and sources</h2>
+
+  <h3>Glossary</h3>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Term</th><th>Meaning</th></tr></thead>
+    <tbody>
+      <tr><td><b>Agent</b></td><td>A model in a loop with tools and memory that chooses its own next step.</td></tr>
+      <tr><td><b>Tool</b></td><td>A function the agent can call, described by a name, description and input schema.</td></tr>
+      <tr><td><b>MCP</b></td><td>Model Context Protocol: a standard for exposing tools, resources and prompts to agents.</td></tr>
+      <tr><td><b>A2A</b></td><td>Agent2Agent protocol: a standard for agents to discover and delegate work to each other.</td></tr>
+      <tr><td><b>Agent Card</b></td><td>JSON document describing an A2A agent: name, skills, endpoints and auth.</td></tr>
+      <tr><td><b>Task</b></td><td>A unit of work in A2A with a lifecycle and outputs called artifacts.</td></tr>
+      <tr><td><b>Streamable HTTP</b></td><td>MCP's remote transport, using one HTTP endpoint with optional streaming.</td></tr>
+      <tr><td><b>RAG</b></td><td>Retrieval-augmented generation: fetch relevant documents and give them to the model.</td></tr>
+      <tr><td><b>Guardrail</b></td><td>A filter or policy that checks model inputs, outputs or actions.</td></tr>
+      <tr><td><b>OBO</b></td><td>On-behalf-of: the agent acts with the end user's delegated permissions.</td></tr>
+      <tr><td><b>Trajectory</b></td><td>The sequence of tool calls an agent made. Evaluated alongside the final answer.</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>Troubleshooting quick list</h3>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Symptom</th><th>Likely cause</th><th>Fix</th></tr></thead>
+    <tbody>
+      <tr><td>Agent never calls the tool</td><td>Vague tool description or too many tools</td><td>Rewrite the description with "use when"; cut to 3-5 tools.</td></tr>
+      <tr><td>A2A call returns 404 or "method not found"</td><td>0.3 vs 1.0 mismatch, wrong card path</td><td>Fetch the card; match method names and version header.</td></tr>
+      <tr><td>401 or 403 from a remote agent or MCP server</td><td>Wrong audience, expired token, "Bearer" prefix mismatch</td><td>Decode the JWT; check <code>aud</code>, <code>exp</code>, scope; check the platform's token format rule.</td></tr>
+      <tr><td>MCP client hangs or fails to connect</td><td>Using deprecated SSE transport, or missing <code>/mcp</code> path</td><td>Use Streamable HTTP and the exact endpoint path.</td></tr>
+      <tr><td>Agent loops forever</td><td>No stop condition or tool returns unhelpful errors</td><td>Add a step limit; return actionable errors the model can act on.</td></tr>
+      <tr><td>Sessions disappear</td><td>In-memory session service on a scaled-out container</td><td>Use a managed or database-backed session service.</td></tr>
+      <tr><td>Latency spikes</td><td>Sequential tool calls, huge tool outputs, cold starts</td><td>Parallelize, trim outputs, keep a minimum instance count.</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>Sources and how this was checked</h3>
+  <p>The agent concepts in section 01 follow Krish Tiwari's <i>The Complete Guide to Building AI Agents: From Zero to Production</i>, updated for the current protocol versions. Platform steps were checked against the vendor pages below in October 2026. Where a page paraphrased code or omitted a detail, the sample is tagged <span class="tag verify">verify</span> in the text.</p>
+  <ul class="srcs">
+    <li>Google ADK, Cloud Run deployment: <a href="https://adk.dev/deploy/cloud-run/">adk.dev/deploy/cloud-run</a></li>
+    <li>Google ADK, Agent Runtime deployment: <a href="https://adk.dev/deploy/agent-runtime/deploy/">adk.dev/deploy/agent-runtime/deploy</a></li>
+    <li>AWS, AgentCore Gateway quick start: <a href="https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/gateway-quick-start.html">docs.aws.amazon.com/bedrock-agentcore</a></li>
+    <li>Oracle, Generative AI Responses API (getting started with agents, tool support, projects): <a href="https://docs.oracle.com/en-us/iaas/Content/generative-ai/home.htm">docs.oracle.com generative-ai</a></li>
+    <li>Oracle, OCI ADK with Autonomous AI Database MCP Server: <a href="https://blogs.oracle.com/machinelearning+selectai/build-ai-agents-using-oci-agent-developer-kit-with-oracle-autonomous-ai-database-mcp-server">blogs.oracle.com</a></li>
+    <li>A2A v1.0 builder's guide: <a href="https://aaif.io">aaif.io</a>; protocol home: <a href="https://a2a-protocol.org">a2a-protocol.org</a></li>
+    <li>Model Context Protocol: <a href="https://modelcontextprotocol.io">modelcontextprotocol.io</a></li>
+    <li>Strands Agents: <a href="https://strandsagents.com">strandsagents.com</a></li>
+  </ul>
+</div></section>
+</main>
+
+<footer><div class="wrap">
+  <p>Build Agents Field Guide · Independent guide, not affiliated with Google, Amazon or Oracle. Product names belong to their owners. Always confirm commands against current vendor documentation before running them in production.</p>
+</div></footer>
+
+<script>
+(function(){
+  var $=function(s,r){return (r||document).querySelector(s)}, $$=function(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s))};
+  function store(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){return null}}
+
+  /* theme */
+  var root=document.documentElement;
+  var saved=store('ba-theme'); if(saved==='dark'||saved==='light') root.setAttribute('data-theme',saved);
+  $('#themeBtn').addEventListener('click',function(){
+    var cur=root.getAttribute('data-theme');
+    if(!cur) cur=(window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light';
+    var next=cur==='dark'?'light':'dark'; root.setAttribute('data-theme',next); store('ba-theme',next);
+  });
+
+  /* smooth in-page navigation without changing the frame location */
+  function goto(id){
+    var el=document.getElementById(id); if(!el) return;
+    el.scrollIntoView({behavior:'smooth',block:'start'});
+    try{history.replaceState(null,'','#'+id)}catch(e){}
+  }
+  $$('#toc a').forEach(function(a){a.addEventListener('click',function(e){e.preventDefault();goto(a.getAttribute('href').slice(1))})});
+  $$('[data-go]').forEach(function(b){b.addEventListener('click',function(){goto(b.getAttribute('data-go'))})});
+
+  /* scrollspy */
+  var links=$$('#toc a'), secs=links.map(function(a){return document.getElementById(a.getAttribute('href').slice(1))});
+  function spy(){
+    var y=window.scrollY+120, cur=-1;
+    secs.forEach(function(s,i){if(s&&s.offsetTop<=y)cur=i});
+    links.forEach(function(a,i){a.classList.toggle('on',i===cur)});
+    var on=links[cur]; if(on&&on.scrollIntoView&&on.parentNode.scrollWidth>on.parentNode.clientWidth){
+      var p=on.parentNode; p.scrollLeft=on.offsetLeft-p.clientWidth/2+on.clientWidth/2;
+    }
+  }
+  window.addEventListener('scroll',spy,{passive:true}); spy();
+
+  /* cloud tabs */
+  function showCloud(c){
+    $$('.ctab').forEach(function(b){b.setAttribute('aria-selected',b.getAttribute('data-cloud')===c?'true':'false')});
+    $$('.cpanel').forEach(function(p){p.hidden=(p.id!=='panel-'+c)});
+    store('ba-cloud',c);
+  }
+  $$('.ctab').forEach(function(b){b.addEventListener('click',function(){showCloud(b.getAttribute('data-cloud'))})});
+  var sc=store('ba-cloud'); if(sc==='gcp'||sc==='aws'||sc==='oci') showCloud(sc);
+
+  /* syntax tint (light touch: comments, strings, a few keywords) */
+  var KW=/\b(import|from|def|return|for|in|if|else|try|except|with|as|class|async|await|None|True|False|raise|lambda|print|const|let|function)\b/g;
+  function tint(src,lang){
+    var esc=src.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    if(lang==='json'||lang==='text') return esc;
+    var out=[],re=/(#[^\n]*|\/\/[^\n]*)|("(?:[^"\\\n]|\\.)*"|'(?:[^'\\\n]|\\.)*')/g,last=0,m;
+    while((m=re.exec(esc))){
+      out.push(kw(esc.slice(last,m.index),lang));
+      out.push(m[1]?'<span class="tok-c">'+m[1]+'</span>':'<span class="tok-s">'+m[2]+'</span>');
+      last=re.lastIndex;
+    }
+    out.push(kw(esc.slice(last),lang));
+    return out.join('');
+  }
+  function kw(s,lang){return lang==='python'?s.replace(KW,'<span class="tok-k">$1</span>'):s}
+
+  /* copy buttons */
+  $$('.codeblock').forEach(function(cb){
+    var code=$('code',cb), raw=code.textContent, lang=cb.getAttribute('data-lang')||'';
+    code.innerHTML=tint(raw,lang);
+    var btn=$('button',cb);
+    btn.addEventListener('click',function(){
+      function done(ok){btn.textContent=ok?'Copied':'Select + copy';setTimeout(function(){btn.textContent='Copy'},1600)}
+      function fallback(){try{var r=document.createRange();r.selectNodeContents(code);var s=getSelection();s.removeAllRanges();s.addRange(r);done(false)}catch(e){done(false)}}
+      try{navigator.clipboard.writeText(raw).then(function(){done(true)},fallback)}catch(e){fallback()}
+    });
+  });
+
+  /* quiz */
+  var NAMES={gcp:'Google Cloud',aws:'AWS',oci:'Oracle Cloud'}, COL={gcp:'var(--gcp)',aws:'var(--aws)',oci:'var(--oci)'};
+  var W={q1:2,q2:2,q3:2,q4:1,q5:2};
+  function score(){
+    var s={gcp:0,aws:0,oci:0},any=false;
+    Object.keys(W).forEach(function(q){
+      var el=$('input[name='+q+']:checked'); if(!el) return; any=true;
+      if(NAMES[el.value]) s[el.value]+=W[q];
+    });
+    var res=$('#quizres'); if(!any){res.innerHTML='';return}
+    var max=Math.max(s.gcp,s.aws,s.oci,1), keys=Object.keys(s).sort(function(a,b){return s[b]-s[a]});
+    var html=keys.map(function(k){return '<div class="rbar"><b>'+NAMES[k]+'</b><div class="t"><i style="width:'+Math.round(s[k]/max*100)+'%;background:'+COL[k]+'"></i></div><span>'+s[k]+'</span></div>'}).join('');
+    var top=keys[0], tie=s[keys[0]]===s[keys[1]];
+    html+='<p style="margin-top:6px">'+(s[top]===0?'No platform stands out, so pick the one your team can operate best.':tie?'It is close between '+NAMES[keys[0]]+' and '+NAMES[keys[1]]+'. This is a good case for A2A across both.':'Leaning <b>'+NAMES[top]+'</b>. Open its build track above and compare the comparison table.')+'</p>';
+    res.innerHTML=html;
+  }
+  $$('#quiz input').forEach(function(i){i.addEventListener('change',score)});
+
+  /* checklist */
+  var items=$$('#checklist li'), prog=$('#prog');
+  function upd(){
+    var n=0; items.forEach(function(li){var c=$('input',li).checked; li.classList.toggle('done',c); if(c)n++});
+    prog.style.width=Math.round(n/items.length*100)+'%';
+  }
+  items.forEach(function(li){
+    var cb=$('input',li), k='ba-chk-'+li.getAttribute('data-id');
+    if(store(k)==='1') cb.checked=true;
+    cb.addEventListener('change',function(){store(k,cb.checked?'1':'0');upd()});
+  });
+  upd();
+
+  /* open directly to a hash */
+  if(location.hash){var h=location.hash.slice(1); if(document.getElementById(h)) setTimeout(function(){goto(h)},200)}
+})();
+</script>
+
+</body>
+</html>
